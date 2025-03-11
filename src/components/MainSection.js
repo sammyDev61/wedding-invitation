@@ -1,4 +1,4 @@
-import backgroundImg from '../images/main/1.jpg';
+import backgroundImg from '../images/mainImage.jpg';
 
 function MainSection() {
   const sectionStyle = {
