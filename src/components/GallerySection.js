@@ -44,7 +44,7 @@ function GallerySection() {
   };
 
   return (
-    <section>
+    <div>
       <SectionTitle text="Gallery" />
       <div className={styles.galleryGrid}>
         {images.map((img, index) => (
@@ -67,7 +67,7 @@ function GallerySection() {
           onNextImage={handleNextImage}
         />
       )}
-    </section>
+    </div>
   );
 }
 
