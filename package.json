@@ -15,9 +15,9 @@
     "wedding-invitation": "file:"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "tailwind:init": "tailwindcss init -p",
     "init:tailwind": "./node_modules/.bin/tailwindcss init -p"
@@ -41,6 +41,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.17",
     "daisyui": "^4.7.2",
     "postcss": "^8.4.35",

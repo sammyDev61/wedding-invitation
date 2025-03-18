@@ -1,8 +1,8 @@
 import React from "react";
 
-import MainSection from "./components/MainSection";
-import GuestbookSection from "./components/GuestbookSection";
-import InfoAndGallerySection from "./components/InfoAndGallerySection";
+import MainSection from "@features/main/MainSection";
+import GuestbookSection from "@features/guestbook/GuestbookSection";
+import InfoAndGallerySection from "@features/gallery/InfoAndGallerySection";
 
 import "./App.css";
 

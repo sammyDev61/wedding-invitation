@@ -1,4 +1,4 @@
-import styles from "./InvitationSection.module.css";
+import styles from "./styles/InvitationSection.module.css";
 
 function InvitationSection() {
   return (

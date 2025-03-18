@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
-import SectionTitle from "./SectionTitle";
+import SectionTitle from "@components/common/SectionTitle";
 import ImageViewer from "./ImageViewer";
 
-import styles from "./GallerySection.module.css";
+import styles from "./styles/GallerySection.module.css";
 
 function GallerySection() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);

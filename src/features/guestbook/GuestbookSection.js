@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import SectionTitle from "./SectionTitle";
-import GuestbookForm from "./GuestbookForm";
-import GuestbookDetail from "./GuestbookDetail";
+import styles from "./styles/GuestbookSection.module.css";
+import SectionTitle from "@components/common/SectionTitle";
+import GuestbookForm from "./components/GuestbookForm";
+import GuestbookDetail from "./components/GuestbookDetail";
 
 function GuestbookSection() {
   const [guestbook, setGuestbook] = useState([
@@ -112,38 +113,30 @@ function GuestbookSection() {
           첫 번째 방명록을 작성해주세요 💝
         </div>
       ) : (
-        <div className="w-full overflow-x-auto scrollbar-hide">
-          <div className="inline-flex flex-col gap-4 min-w-max pb-4">
-            <div className="grid grid-rows-2 auto-cols-[150px] grid-flow-col gap-4">
-              {guestbook.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-3 bg-white/50 backdrop-blur-sm rounded-lg shadow-sm h-[180px] cursor-pointer hover:bg-white/60 transition-colors flex flex-col"
-                  onClick={() => setSelectedEntry(entry)}>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-sm text-gray-700 break-words overflow-hidden line-clamp-6">
-                      {entry.message}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
-                    <span className="text-xs text-gray-500 shrink-0">
-                      {entry.date}
-                    </span>
-                    <span className="font-medium text-base truncate">
-                      {entry.name}
-                    </span>
-                  </div>
+        <div className={styles.guestbookContainer}>
+          <div className={styles.guestbookGrid}>
+            {guestbook.map((entry) => (
+              <div
+                key={entry.id}
+                className={styles.guestbookEntry}
+                onClick={() => setSelectedEntry(entry)}>
+                <div className={styles.messageContent}>
+                  <p className={styles.messageText}>{entry.message}</p>
                 </div>
-              ))}
-            </div>
+                <div className={styles.entryFooter}>
+                  <span className={styles.date}>{entry.date}</span>
+                  <span className={styles.authorName}>{entry.name}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="flex w-full justify-end">
+      <div className="mt-4">
         <button
           onClick={() => setIsFormVisible(true)}
-          className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
+          className={styles.writeButton}>
           작성
         </button>
       </div>

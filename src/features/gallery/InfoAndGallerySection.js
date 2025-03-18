@@ -1,7 +1,7 @@
 import React from "react";
-import InvitationSection from "./InvitationSection";
+import InvitationSection from "@features/invitation/InvitationSection";
 import GallerySection from "./GallerySection";
-import "./InfoAndGallerySection.module.css";
+import styles from "./styles/InfoAndGallerySection.module.css";
 
 function InfoAndGallerySection() {
   return (

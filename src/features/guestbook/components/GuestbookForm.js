@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function GuestbookForm({ onSubmit, onClose }) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const nameInputRef = useRef(null);
+
+  useEffect(() => {
+    nameInputRef.current?.focus();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -15,28 +20,29 @@ function GuestbookForm({ onSubmit, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000] p-4"
+      className="fixed inset-0 bg-black/80 flex justify-center items-center z-[1000] p-4 min-h-[100dvh]"
       onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-xl"
+        className="w-full max-w-lg max-h-[calc(100dvh-32px)] bg-white rounded-2xl shadow-xl overflow-auto"
         onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-medium">방명록</h2>
+            <h2 className="text-2xl font-medium leading-none">방명록</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600">
+              className="text-gray-400 hover:text-gray-600 h-[32px] flex items-center">
               ✕
             </button>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <input
+                ref={nameInputRef}
                 type="text"
                 placeholder="이름"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-300"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-300 bg-white"
               />
             </div>
             <div className="mb-6">
@@ -44,7 +50,7 @@ function GuestbookForm({ onSubmit, onClose }) {
                 placeholder="메시지를 남겨주세요"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full h-32 px-4 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-300"
+                className="w-full h-32 px-4 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-300 bg-white"
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -56,7 +62,7 @@ function GuestbookForm({ onSubmit, onClose }) {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
                 등록
               </button>
             </div>
