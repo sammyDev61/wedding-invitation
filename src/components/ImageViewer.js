@@ -23,7 +23,7 @@ function ImageViewer({
         <img
           src={images[selectedImageIndex]}
           alt={`이미지 ${selectedImageIndex + 1}`}
-          className="w-screen h-auto object-cover p-0"
+          className="w-full max-w-4xl h-auto object-contain py-4"
         />
         <div className="text-white text-base font-bold">
           {selectedImageIndex + 1} / {images.length}
