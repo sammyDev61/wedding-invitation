@@ -1,8 +1,8 @@
-import React from "react";
-
 import MainSection from "@features/main/MainSection";
+
+import InvitationSection from "@features/invitation/InvitationSection";
+import GallerySection from "@features/gallery/GallerySection";
 import GuestbookSection from "@features/guestbook/GuestbookSection";
-import InfoAndGallerySection from "@features/gallery/InfoAndGallerySection";
 
 import "./App.css";
 
@@ -10,8 +10,11 @@ function App() {
   return (
     <div className="App">
       <MainSection />
-      <InfoAndGallerySection />
-      <GuestbookSection />
+      <div className="space-y-24 py-24">
+        <InvitationSection />
+        <GallerySection />
+        <GuestbookSection />
+      </div>
     </div>
   );
 }

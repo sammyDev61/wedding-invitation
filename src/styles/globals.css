@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Noto Sans KR", system-ui, sans-serif;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.font-title {
+  font-family: "Dancing Script", cursive !important;
+  font-size: 4rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}

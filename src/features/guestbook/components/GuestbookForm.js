@@ -20,10 +20,10 @@ function GuestbookForm({ onSubmit, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex justify-center items-center z-[1000] p-4 min-h-[100dvh]"
+      className="fixed inset-0 bg-black/80 flex justify-center items-center z-[1000] p-4"
       onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[calc(100dvh-32px)] bg-white rounded-2xl shadow-xl overflow-auto"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-auto"
         onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">

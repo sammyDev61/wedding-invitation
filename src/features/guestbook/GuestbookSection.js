@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+
 import styles from "./styles/GuestbookSection.module.css";
+
 import SectionTitle from "@components/common/SectionTitle";
+
 import GuestbookForm from "./components/GuestbookForm";
 import GuestbookDetail from "./components/GuestbookDetail";
 
@@ -91,7 +94,7 @@ function GuestbookSection() {
   };
 
   return (
-    <section className="w-full">
+    <div className="px-4">
       <SectionTitle text="Guestbook" />
 
       {isFormVisible && (
@@ -133,14 +136,14 @@ function GuestbookSection() {
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4 flex justify-end">
         <button
           onClick={() => setIsFormVisible(true)}
           className={styles.writeButton}>
           작성
         </button>
       </div>
-    </section>
+    </div>
   );
 }
 

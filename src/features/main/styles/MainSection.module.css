@@ -1,0 +1,39 @@
+.container {
+  width: 100%;
+  min-height: 100dvh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url("@assets/images/mainImage.jpg");
+}
+
+.topContent {
+  position: relative;
+  text-align: center;
+  color: white;
+  margin-top: 5rem;
+  z-index: 10;
+}
+
+.bottomContent {
+  position: relative;
+  text-align: center;
+  color: white;
+  margin-bottom: 5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  z-index: 10;
+}
