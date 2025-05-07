@@ -1,0 +1,16 @@
+.container {
+  width: 100%;
+  overflow-x: hidden;
+  will-change: transform;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container > div {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+  display: flex;
+  align-items: center;
+}
