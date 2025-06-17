@@ -4,23 +4,38 @@ function InfoSection() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h2 className={styles.title}>Wedding Information</h2>
-        <div className={styles.infoGrid}>
-          <div className={styles.infoItem}>
-            <h3>날짜</h3>
-            <p>2025년 5월 18일</p>
-            <p>일요일 오후 2시</p>
-          </div>
-          <div className={styles.infoItem}>
-            <h3>장소</h3>
-            <p>그랜드 웨딩홀</p>
-            <p>서울시 강남구 테헤란로 123</p>
-          </div>
-          <div className={styles.infoItem}>
-            <h3>연락처</h3>
-            <p>신랑: 010-1234-5678</p>
-            <p>신부: 010-8765-4321</p>
-          </div>
+        <h2 className={styles.title}>We are getting married!</h2>
+        <div className={styles.infoText}>
+          여름빛이 가득한 7월, 저희 결혼합니다.<br/>
+          고마운 분들을 모시고 예를 갖추는 것이 도리이나<br/>
+          두 사람의 뜻에 따라 소박한 결혼식을 올리게 되었습니다.<br/>
+          너그러이 헤아려 주시고 마음으로 축하해 주신다면,<br/>
+          서로 아끼며 행복하게 잘 살아가는 모습으로 보답하겠습니다.
+        </div>
+        <div className={styles.infoText}>
+          <b>김창섭 · 윤은자</b> 의 아들 <b>김재원</b>
+          <br/>
+          <b>故신휘철 · 박선화</b> 의 딸 <b>신새미</b>
+        </div>
+        <div className={styles.infoText}>
+          <b>2025년 7월 5일</b>
+          {(() => {
+            const weddingDate = new Date('2025-07-05');
+            const today = new Date();
+            const diffTime = weddingDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let dDayText;
+            if (diffDays > 0) {
+              dDayText = `D-${diffDays}`;
+            } else if (diffDays === 0) {
+              dDayText = 'D-Day';
+            } else {
+              dDayText = `D+${Math.abs(diffDays)}`;
+            }
+            
+            return <div>{dDayText}</div>;
+          })()}
         </div>
       </div>
     </div>

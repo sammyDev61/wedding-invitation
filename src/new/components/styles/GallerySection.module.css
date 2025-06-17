@@ -1,9 +1,11 @@
 .container {
   width: 100%;
-  padding: 2rem 1rem;
-  background-color: #fff;
+  padding: 4rem 2rem;
+  /* padding-top: 0; */
+  background-color: #f8f8f8;
   display: flex;
   align-items: center;
+  outline: none;
 }
 
 .content {
@@ -14,130 +16,274 @@
 
 .title {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 2rem;
   color: #333;
 }
 
-.galleryContainer {
-  width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-.galleryContainer::-webkit-scrollbar {
-  display: none;
-}
-
-.gallery {
-  display: grid;
-  grid-template-rows: repeat(4, 120px);
-  grid-auto-flow: column;
-  grid-auto-columns: 120px;
-  gap: 0.5rem;
-  padding-bottom: 1rem;
-}
-
-.imageWrapper {
+/* 캐러셀 컨테이너 */
+.carouselContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 0;
   position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 폴라로이드 프레임 */
+.polaroidFrame {
+  background: #fff;
+  padding: 1rem 1rem 3rem 1rem;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 6px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  transform: rotate(-1deg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 500px;
+  margin: 0 auto;
   cursor: pointer;
-  transition: transform 0.2s ease;
 }
 
-.imageWrapper:hover {
-  transform: scale(1.05);
+.polaroidFrame:hover {
+  transform: rotate(0deg) scale(1.02);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
-.imageWrapper img {
-  position: absolute;
-  top: 0;
-  left: 0;
+.polaroidInner {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
-.popup {
+.carouselImage {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 2px;
+  display: block;
+}
+
+.polaroidCaption {
+  margin-top: 1rem;
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 네비게이션 버튼 */
+.navButton {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  color: #555;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.navButton:hover {
+  background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.95));
+  color: #333;
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 1);
+}
+
+.navButton:active {
+  transform: scale(1.05) translateY(-1px);
+  transition: all 0.1s ease;
+}
+
+/* 이미지 카운터 */
+.imageCounter {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 도트 네비게이션 */
+.dotsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot:hover {
+  background-color: #999;
+  transform: scale(1.2);
+}
+
+.dotActive {
+  background-color: #666;
+  transform: scale(1.3);
+}
+
+/* 확대 보기 모달 */
+.modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  padding: 2rem;
+  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  animation: fadeIn 0.3s ease;
 }
 
-.popupContent {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
   position: relative;
-  max-width: 90%;
-  max-height: 90vh;
+  max-width: 95vw;
+  max-height: 95vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
-.popupImage {
+.modalImage {
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .closeButton {
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: none;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease;
-}
-
-.closeButton:hover {
-  transform: scale(1.1);
-}
-
-.navButton {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  font-size: 24px;
+  font-size: 20px;
+  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
-  z-index: 1;
+  backdrop-filter: blur(10px);
+  z-index: 10;
 }
 
-.navButton:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+.modalNavButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 64px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.modalNavButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-50%) scale(1.1);
 }
 
+.modalImageCounter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* 반응형 디자인 */
 @media (min-width: 768px) {
   .container {
     padding: 4rem 2rem;
@@ -148,30 +294,114 @@
     margin-bottom: 3rem;
   }
 
-  .gallery {
-    grid-template-rows: repeat(4, 150px);
-    grid-auto-columns: 150px;
-    gap: 1rem;
+  .polaroidFrame {
+    max-width: 800px;
+    padding: 1.5rem 1.5rem 4rem 1.5rem;
   }
 
-  .imageWrapper {
-    border-radius: 12px;
+  .polaroidCaption {
+    font-size: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .navButton {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 18px;
+  }
+
+  .carouselContainer {
+    gap: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .closeButton {
-    top: -50px;
-    right: 0;
+  .carouselContainer {
+    gap: 1rem;
+    padding: 1rem 0;
   }
-  
-  .popupContent {
-    max-width: 95%;
+
+  .polaroidFrame {
+    max-width: 350px;
+    padding: 0.8rem 0.8rem 2.5rem 0.8rem;
+    transform: rotate(-0.5deg);
+  }
+
+  .navButton {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .polaroidCaption {
+    font-size: 0.8rem;
+    margin-top: 0.8rem;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .dotsContainer {
+    gap: 0.3rem;
+    margin-top: 1rem;
+  }
+
+  .closeButton {
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .modalNavButton {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .modalImageCounter {
+    bottom: 15px;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .carouselContainer {
+    gap: 0.8rem;
+    padding: 1rem 0;
+  }
+
+  .polaroidFrame {
+    max-width: 300px;
   }
 
   .navButton {
     width: 40px;
     height: 40px;
-    font-size: 20px;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 16px;
+  }
+
+  .modalNavButton {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .closeButton {
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
   }
 }

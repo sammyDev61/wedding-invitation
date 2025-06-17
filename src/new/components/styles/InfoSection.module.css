@@ -1,6 +1,5 @@
 .container {
   width: 100%;
-  min-height: 100vh;
   padding: 4rem 2rem;
   background-color: #f8f8f8;
 }
@@ -12,11 +11,22 @@
 
 .title {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
+  font-family: 'GmarketSansMedium', sans-serif;
   margin-bottom: 3rem;
   color: #333;
 }
 
+.infoText {
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-bottom: 3rem;
+  color: #333;
+}
+.infoText:last-child {
+  margin-bottom: 0;
+}
 .info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

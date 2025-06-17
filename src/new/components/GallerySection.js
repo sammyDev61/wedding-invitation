@@ -1,174 +1,154 @@
 import styles from "./styles/GallerySection.module.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 function GallerySection() {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const images = [
-    {
-      src: "/gallery/1.jpg",
-      alt: "갤러리 이미지 1",
-    },
-    {
-      src: "/gallery/2.jpg",
-      alt: "갤러리 이미지 2",
-    },
-    {
-      src: "/gallery/3.jpg",
-      alt: "갤러리 이미지 3",
-    },
-    {
-      src: "/gallery/4.jpg",
-      alt: "갤러리 이미지 4",
-    },
-    {
-      src: "/gallery/5.jpg",
-      alt: "갤러리 이미지 5",
-    },
-    {
-      src: "/gallery/6.jpg",
-      alt: "갤러리 이미지 6",
-    },
-    {
-      src: "/gallery/7.jpg",
-      alt: "갤러리 이미지 7",
-    },
-    {
-      src: "/gallery/8.jpg",
-      alt: "갤러리 이미지 8",
-    },
-    {
-      src: "/gallery/9.jpg",
-      alt: "갤러리 이미지 9",
-    },
-    {
-      src: "/gallery/10.jpg",
-      alt: "갤러리 이미지 10",
-    },
-    {
-      src: "/gallery/11.jpg",
-      alt: "갤러리 이미지 11",
-    },
-    {
-      src: "/gallery/12.jpg",
-      alt: "갤러리 이미지 12",
-    },
-    {
-      src: "/gallery/13.jpg",
-      alt: "갤러리 이미지 13",
-    },
-    {
-      src: "/gallery/14.jpg",
-      alt: "갤러리 이미지 14",
-    },
-    {
-      src: "/gallery/15.jpg",
-      alt: "갤러리 이미지 15",
-    },
-    {
-      src: "/gallery/16.jpg",
-      alt: "갤러리 이미지 16",
-    },
-    {
-      src: "/gallery/17.jpg",
-      alt: "갤러리 이미지 17",
-    },
-    {
-      src: "/gallery/18.jpg",
-      alt: "갤러리 이미지 18",
-    },
-    {
-      src: "/gallery/19.jpg",
-      alt: "갤러리 이미지 19",
-    },
-    {
-      src: "/gallery/20.jpg",
-      alt: "갤러리 이미지 20",
-    },
-  ];
-
-  const handleImageClick = (index) => {
-    setSelectedImageIndex(index);
-  };
-
-  const handleClosePopup = () => {
-    setSelectedImageIndex(null);
-  };
+  // 이미지 개수 설정 (필요시 변경 가능)
+  const TOTAL_IMAGES = 24;
+  
+  // 동적으로 이미지 배열 생성
+  const images = Array.from({ length: TOTAL_IMAGES }, (_, index) => {
+    const imageNumber = (index + 1).toString().padStart(3, '0');
+    return {
+      src: `/new_gallery/${imageNumber}.jpg`,
+      alt: `갤러리 이미지 ${index + 1}`,
+    };
+  });
 
   const handlePrevImage = () => {
-    setSelectedImageIndex((prevIndex) => 
+    setCurrentImageIndex((prevIndex) => 
       prevIndex > 0 ? prevIndex - 1 : images.length - 1
     );
   };
 
   const handleNextImage = () => {
-    setSelectedImageIndex((prevIndex) => 
+    setCurrentImageIndex((prevIndex) => 
       prevIndex < images.length - 1 ? prevIndex + 1 : 0
     );
   };
 
+  const handleImageClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   const handleKeyDown = (e) => {
-    if (selectedImageIndex === null) return;
-    
     if (e.key === 'ArrowLeft') {
       handlePrevImage();
     } else if (e.key === 'ArrowRight') {
       handleNextImage();
-    } else if (e.key === 'Escape') {
-      handleClosePopup();
+    } else if (e.key === 'Escape' && isModalOpen) {
+      handleCloseModal();
     }
   };
 
+  const handleDotClick = (index) => {
+    setCurrentImageIndex(index);
+  };
+
+  // 모달이 열렸을 때 스크롤 방지
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
   return (
-    <div className={styles.container}>
+    <div className={styles.container} onKeyDown={handleKeyDown} tabIndex={0}>
       <div className={styles.content}>
-        <h2 className={styles.title}>갤러리</h2>
-        <div className={styles.galleryContainer}>
-          <div className={styles.gallery}>
-            {images.map((image, index) => (
-              <div 
-                key={index} 
-                className={styles.imageWrapper}
-                onClick={() => handleImageClick(index)}
-                role="button"
-                tabIndex={0}
-              >
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  loading="lazy"
-                  decoding="async"
-                />
+        <h2 className={styles.title}>Gallery</h2>
+        
+        <div className={styles.carouselContainer}>
+          <button 
+            className={styles.navButton} 
+            onClick={handlePrevImage}
+            aria-label="이전 이미지"
+          >
+            ❮
+          </button>
+          
+          <div className={styles.polaroidFrame} onClick={handleImageClick}>
+            <div className={styles.polaroidInner}>
+              <img
+                src={images[currentImageIndex].src}
+                alt={images[currentImageIndex].alt}
+                className={styles.carouselImage}
+                loading="lazy"
+                decoding="async"
+              />
+              <div className={styles.polaroidCaption}>
+                {currentImageIndex + 1} / {images.length}
               </div>
-            ))}
+            </div>
           </div>
+          
+          <button 
+            className={styles.navButton} 
+            onClick={handleNextImage}
+            aria-label="다음 이미지"
+          >
+            ❯
+          </button>
         </div>
       </div>
 
-      {selectedImageIndex !== null && (
+      {/* 확대 보기 모달 */}
+      {isModalOpen && createPortal(
         <div 
-          className={styles.popup} 
-          onClick={handleClosePopup}
-          onKeyDown={handleKeyDown}
-          tabIndex={-1}
+          className={styles.modal} 
+          onClick={handleCloseModal}
         >
-          <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.closeButton} onClick={handleClosePopup}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.closeButton} 
+              onClick={handleCloseModal}
+              aria-label="닫기"
+            >
               ✕
             </button>
-            <button className={styles.navButton} onClick={handlePrevImage} style={{ left: 0 }}>
+            
+            <button 
+              className={styles.modalNavButton} 
+              onClick={handlePrevImage}
+              style={{ left: '20px' }}
+              aria-label="이전 이미지"
+            >
               ❮
             </button>
+            
             <img
-              src={images[selectedImageIndex].src}
-              alt={images[selectedImageIndex].alt}
-              className={styles.popupImage}
+              src={images[currentImageIndex].src}
+              alt={images[currentImageIndex].alt}
+              className={styles.modalImage}
             />
-            <button className={styles.navButton} onClick={handleNextImage} style={{ right: 0 }}>
+            
+            <button 
+              className={styles.modalNavButton} 
+              onClick={handleNextImage}
+              style={{ right: '20px' }}
+              aria-label="다음 이미지"
+            >
               ❯
             </button>
+
+            <div className={styles.modalImageCounter}>
+              {currentImageIndex + 1} / {images.length}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
