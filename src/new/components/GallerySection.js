@@ -52,10 +52,6 @@ function GallerySection() {
     }
   };
 
-  const handleDotClick = (index) => {
-    setCurrentImageIndex(index);
-  };
-
   // GSAP 스크롤 애니메이션
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
