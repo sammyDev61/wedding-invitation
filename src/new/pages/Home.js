@@ -4,6 +4,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import MainSection from "../components/MainSection";
 import InfoSection from "../components/InfoSection";
 import GallerySection from "../components/GallerySection";
+import SectionDivider from "../components/SectionDivider";
 import styles from "./styles/Home.module.css";
 
 function Home() {
@@ -94,9 +95,11 @@ function Home() {
   return (
     <div className={styles.container}>
       <MainSection />
+      <SectionDivider />
       <div ref={(el) => (sectionsRef.current[0] = el)}>
         <InfoSection />
       </div>
+      <SectionDivider />
       <div ref={(el) => (sectionsRef.current[2] = el)}>
         <GallerySection />
       </div>

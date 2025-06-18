@@ -67,8 +67,8 @@ function MainSection() {
       <div className={styles.background}></div>
       <div ref={contentRef} className={styles.content}>
         <h1 className={styles.date}>2025.07.05</h1>
-        <div className={styles.subImage}></div>
         <h2 className={styles.title}>Our Wedding Day</h2>
+        <div className={styles.subImage}></div>
         <div className={styles.names}>
           <h3>Jaewon</h3>
           <h3>Saemi</h3>

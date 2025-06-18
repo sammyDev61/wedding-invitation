@@ -4,14 +4,7 @@
   max-width: 480px;
   margin: 0 auto;
   font-family: 'GmarketSansMedium', sans-serif;
-  background: linear-gradient(
-    165deg,
-    #e8ecf4 0%,
-    #d4e1ff 20%,
-    #b6c4db 50%,
-    #a3b5d3 80%,
-    #8fa4c6 100%
-  );
+  background: #f8f8f8;
   color: #333;
   overflow-x: hidden;
   min-height: 100vh;

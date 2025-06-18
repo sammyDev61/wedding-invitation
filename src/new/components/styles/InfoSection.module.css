@@ -17,6 +17,14 @@
   color: #333;
 }
 
+.infoMessage {
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  margin-bottom: 3rem;
+  color: #333;
+}
+
 .infoText {
   text-align: center;
   font-size: 1rem;

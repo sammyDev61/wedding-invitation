@@ -6,6 +6,25 @@
   display: flex;
   align-items: center;
   outline: none;
+  /* 전역 이미지 보호 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 모든 이미지에 대한 보호 */
+.container img {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: none !important;
 }
 
 .content {
@@ -64,6 +83,17 @@
   object-position: center;
   border-radius: 2px;
   display: block;
+  /* 이미지 보호 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
 }
 
 .polaroidCaption {
@@ -93,29 +123,62 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.1),
     0 2px 4px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   z-index: 10;
-  backdrop-filter: blur(10px);
+  /* 터치 기기에서 하이라이트 방지 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 화살표 정렬을 위한 설정 */
+  text-align: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
 }
 
-.navButton:hover {
-  background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.95));
-  color: #333;
-  transform: scale(1.15) translateY(-2px);
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    0 4px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
-  border-color: rgba(255, 255, 255, 1);
+/* 아이콘 스타일 */
+.navButton svg {
+  width: 18px;
+  height: 18px;
+  transition: inherit;
 }
 
+/* 데스크톱 호버 효과 (터치 기기가 아닐 때만) */
+@media (hover: hover) and (pointer: fine) {
+  .navButton:hover {
+    background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.95));
+    color: #333;
+    transform: scale(1.15) translateY(-2px);
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.15),
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, 1);
+  }
+}
+
+/* 터치 피드백 (모든 기기에서) */
 .navButton:active {
-  transform: scale(1.05) translateY(-1px);
+  transform: scale(0.95);
   transition: all 0.1s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.75));
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* 포커스 아웃 후 기본 상태로 복구 */
+.navButton:focus {
+  outline: none;
+}
+
+.navButton:not(:active):not(:focus) {
+  transform: scale(1);
 }
 
 /* 이미지 카운터 */
@@ -163,6 +226,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
   background-color: rgba(0, 0, 0, 0.95);
   display: flex;
   justify-content: center;
@@ -203,6 +267,17 @@
   object-fit: contain;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: zoomIn 0.3s ease;
+  /* 이미지 보호 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
 }
 
 @keyframes zoomIn {
@@ -222,8 +297,8 @@
   right: 20px;
   width: 48px;
   height: 48px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   color: white;
   font-size: 20px;
   font-weight: bold;
@@ -233,14 +308,45 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
   z-index: 10;
+  /* 터치 기기에서 하이라이트 방지 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.closeButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: scale(1.1);
+/* 닫기 버튼 아이콘 스타일 */
+.closeButton svg {
+  width: 20px;
+  height: 20px;
+  transition: inherit;
+}
+
+/* 데스크톱 호버 효과 (터치 기기가 아닐 때만) */
+@media (hover: hover) and (pointer: fine) {
+  .closeButton:hover {
+    background: rgba(0, 0, 0, 0.75);
+    border-color: rgba(0, 0, 0, 0.6);
+    transform: scale(1.1);
+  }
+}
+
+/* 터치 피드백 (모든 기기에서) */
+.closeButton:active {
+  transform: scale(0.95);
+  transition: all 0.1s ease;
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 포커스 아웃 후 기본 상태로 복구 */
+.closeButton:focus {
+  outline: none;
+}
+
+.closeButton:not(:active):not(:focus) {
+  transform: scale(1);
 }
 
 .modalNavButton {
@@ -249,8 +355,8 @@
   transform: translateY(-50%);
   width: 64px;
   height: 64px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   color: white;
   font-size: 24px;
   font-weight: bold;
@@ -260,27 +366,65 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  /* 터치 기기에서 하이라이트 방지 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 화살표 정렬을 위한 설정 */
+  text-align: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
 }
 
-.modalNavButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: translateY(-50%) scale(1.1);
+/* 모달 아이콘 스타일 */
+.modalNavButton svg {
+  width: 22px;
+  height: 22px;
+  transition: inherit;
+}
+
+/* 데스크톱 호버 효과 (터치 기기가 아닐 때만) */
+@media (hover: hover) and (pointer: fine) {
+  .modalNavButton:hover {
+    background: rgba(0, 0, 0, 0.75);
+    border-color: rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%) scale(1.1);
+  }
+}
+
+/* 터치 피드백 (모든 기기에서) */
+.modalNavButton:active {
+  transform: translateY(-50%) scale(0.95);
+  transition: all 0.1s ease;
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 포커스 아웃 후 기본 상태로 복구 */
+.modalNavButton:focus {
+  outline: none;
+}
+
+.modalNavButton:not(:active):not(:focus) {
+  transform: translateY(-50%);
 }
 
 .modalImageCounter {
   position: absolute;
-  bottom: 20px;
+  bottom: env(safe-area-inset-bottom, 80px);
   left: 50%;
   transform: translateX(-50%);
   color: white;
   font-size: 1rem;
   font-weight: 500;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.6);
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
+  z-index: 11;
+  /* 주소창 변화에 영향받지 않도록 고정 */
+  bottom: calc(env(safe-area-inset-bottom) + 80px);
 }
 
 /* 반응형 디자인 */
@@ -319,7 +463,7 @@
 
 @media (max-width: 768px) {
   .carouselContainer {
-    gap: 1rem;
+    gap: 0.8rem;
     padding: 1rem 0;
   }
 
@@ -330,11 +474,20 @@
   }
 
   .navButton {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    font-size: 16px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 18px;
+    /* 모바일에서 더 정확한 중앙 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .navButton svg {
+    width: 16px;
+    height: 16px;
   }
 
   .polaroidCaption {
@@ -359,28 +512,55 @@
     height: 40px;
     font-size: 18px;
   }
+  
+  .closeButton svg {
+    width: 18px;
+    height: 18px;
+  }
 
   .modalNavButton {
     width: 48px;
     height: 48px;
     font-size: 20px;
+    /* 모바일에서 더 정확한 중앙 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modalNavButton svg {
+    width: 18px;
+    height: 18px;
   }
 
   .modalImageCounter {
-    bottom: 15px;
+    position: absolute;
+    bottom: calc(env(safe-area-inset-bottom) + 70px);
     font-size: 0.9rem;
     padding: 0.4rem 0.8rem;
+  }
+  
+  .modalContent {
+    max-width: 100vw;
+    max-height: 100vh;
+    padding: 1rem;
+  }
+  
+  .modalImage {
+    width: 100%;
+    max-width: 100%;
+    object-fit: contain;
   }
 }
 
 @media (max-width: 480px) {
   .carouselContainer {
-    gap: 0.8rem;
+    gap: 0.6rem;
     padding: 1rem 0;
   }
 
   .polaroidFrame {
-    max-width: 300px;
+    max-width: 280px;
   }
 
   .navButton {
@@ -389,12 +569,30 @@
     min-width: 40px;
     min-height: 40px;
     font-size: 16px;
+    /* 작은 화면에서 더 정확한 중앙 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .navButton svg {
+    width: 14px;
+    height: 14px;
   }
 
   .modalNavButton {
     width: 40px;
     height: 40px;
     font-size: 18px;
+    /* 작은 화면에서 더 정확한 중앙 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modalNavButton svg {
+    width: 16px;
+    height: 16px;
   }
 
   .closeButton {
@@ -403,5 +601,30 @@
     width: 36px;
     height: 36px;
     font-size: 16px;
+  }
+  
+  .closeButton svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .modalContent {
+    max-width: 100vw;
+    max-height: 100vh;
+    padding: 0.5rem;
+  }
+  
+  .modalImage {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  .modalImageCounter {
+    position: absolute;
+    bottom: calc(env(safe-area-inset-bottom) + 60px);
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
   }
 }
