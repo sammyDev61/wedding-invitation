@@ -15,43 +15,6 @@ function Home() {
     sectionsRef.current.forEach((section, index) => {
       if (!section) return;
 
-      // 갤러리 섹션 (index 2)은 별도 처리
-      // if (index === 2) {
-      //   const title = section.querySelector("h2");
-      //   const galleryGrid = section.querySelector('[class*="gallery"]');
-        
-      //   // 초기 상태 설정
-      //   gsap.set([title, galleryGrid], {
-      //     opacity: 0,
-      //     y: 30,
-      //   });
-
-      //   // 갤러리 섹션 애니메이션
-      //   const galleryTl = gsap.timeline({
-      //     scrollTrigger: {
-      //       trigger: section,
-      //       start: "top 70%",
-      //       end: "center center",
-      //       toggleActions: "play none none reverse",
-      //     },
-      //   });
-
-      //   galleryTl.to(title, {
-      //     opacity: 1,
-      //     y: 0,
-      //     duration: 0.6,
-      //     ease: "power2.out",
-      //   }).to(galleryGrid, {
-      //     opacity: 1,
-      //     y: 0,
-      //     duration: 0.8,
-      //     ease: "power2.out",
-      //   }, "-=0.2");
-
-      //   return;
-      // }
-
-      // 다른 섹션들은 기존 방식 유지
       const title = section.querySelector("h2");
       const content = section.querySelectorAll(
         'div[class*="info"], div[class*="timeline"], div[class*="messages"], div[class*="form"]'
@@ -72,7 +35,7 @@ function Home() {
           trigger: section,
           start: "top 70%",
           end: "center center",
-          toggleActions: "play none none reverse",
+          toggleActions: "play none none none",
         },
       });
 

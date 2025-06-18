@@ -1,10 +1,14 @@
 import styles from "./styles/GallerySection.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import gsap from "gsap";
+import ScrollTrigger from "gsap/ScrollTrigger";
 
 function GallerySection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const titleRef = useRef(null);
+  const carouselRef = useRef(null);
 
   // 이미지 개수 설정 (필요시 변경 가능)
   const TOTAL_IMAGES = 24;
@@ -52,6 +56,50 @@ function GallerySection() {
     setCurrentImageIndex(index);
   };
 
+  // GSAP 스크롤 애니메이션
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // ScrollTrigger 설정 (모바일 최적화)
+    ScrollTrigger.config({
+      ignoreMobileResize: true,
+      autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+    });
+
+    // 초기 상태: 보이지 않게 설정
+    gsap.set([titleRef.current, carouselRef.current], {
+      opacity: 0,
+      y: 30,
+    });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: titleRef.current,
+        start: "top 70%",
+        end: "center center",
+        toggleActions: "play none none reverse",
+        invalidateOnRefresh: false,
+      },
+    });
+
+    // 순차적 애니메이션
+    tl.to(titleRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out",
+    }).to(carouselRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      ease: "power2.out",
+    }, "-=0.3");
+
+    return () => {
+      tl.kill();
+    };
+  }, []);
+
   // 모달이 열렸을 때 스크롤 방지
   useEffect(() => {
     if (isModalOpen) {
@@ -68,9 +116,9 @@ function GallerySection() {
   return (
     <div className={styles.container} onKeyDown={handleKeyDown} tabIndex={0}>
       <div className={styles.content}>
-        <h2 className={styles.title}>Gallery</h2>
+        <h2 ref={titleRef} className={styles.title}>Gallery</h2>
         
-        <div className={styles.carouselContainer}>
+        <div ref={carouselRef} className={styles.carouselContainer}>
           <button 
             className={styles.navButton} 
             onClick={handlePrevImage}
