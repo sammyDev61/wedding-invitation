@@ -10,9 +10,28 @@ function GallerySection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const titleRef = useRef(null);
   const carouselRef = useRef(null);
+  
+  // 스와이프 관련 상태
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [isTouchMove, setIsTouchMove] = useState(false);
+  const [isMultiTouch, setIsMultiTouch] = useState(false);
+  const [isPinchZoom, setIsPinchZoom] = useState(false);
+  
+  // 애니메이션 관련 상태
+  const [isSliding, setIsSliding] = useState(false);
+  const [slideDirection, setSlideDirection] = useState('');
+  const modalImageRef = useRef(null);
+
+  // 카운터 표시 관련 상태
+  const [showCounter, setShowCounter] = useState(true);
+  const counterTimerRef = useRef(null);
 
   // 이미지 개수 설정 (필요시 변경 가능)
   const TOTAL_IMAGES = 24;
+  
+  // 카운터 자동 숨김 시간 (밀리초)
+  const COUNTER_HIDE_DELAY = 1500;
   
   // 동적으로 이미지 배열 생성
   const images = Array.from({ length: TOTAL_IMAGES }, (_, index) => {
@@ -23,16 +42,101 @@ function GallerySection() {
     };
   });
 
+  // 모바일 감지 함수
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           window.innerWidth <= 768;
+  };
+
+  // 스와이프 감지 최소 거리
+  const minSwipeDistance = 50;
+
+  // 카운터 표시 및 타이머 관리
+  const showCounterWithTimer = () => {
+    setShowCounter(true);
+    
+    // 기존 타이머가 있으면 제거
+    if (counterTimerRef.current) {
+      clearTimeout(counterTimerRef.current);
+    }
+    
+    // 새 타이머 설정
+    counterTimerRef.current = setTimeout(() => {
+      setShowCounter(false);
+    }, COUNTER_HIDE_DELAY);
+  };
+
+  // 슬라이드 애니메이션을 포함한 이미지 변경 함수
+  const slideToImage = (newIndex, direction) => {
+    if (isSliding) return;
+    
+    setIsSliding(true);
+    setSlideDirection(direction);
+    
+    // 이미지 변경 시 카운터 표시
+    showCounterWithTimer();
+    
+    // 애니메이션 실행
+    if (modalImageRef.current) {
+      const slideInDistance = direction === 'left' ? '100%' : '-100%';
+      
+      // 애니메이션 시작 전 will-change 속성 설정
+      modalImageRef.current.style.willChange = 'transform, opacity';
+      
+      // 이미지 인덱스를 먼저 변경
+      setCurrentImageIndex(newIndex);
+      
+      // 새 이미지를 즉시 반대편에 배치
+      gsap.set(modalImageRef.current, {
+        x: slideInDistance,
+        opacity: 0,
+        scale: 0.9
+      });
+      
+      // 새 이미지를 슬라이드 인
+      gsap.to(modalImageRef.current, {
+        x: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.35,
+        ease: "power2.out",
+        onComplete: () => {
+          setIsSliding(false);
+          setSlideDirection('');
+          // 애니메이션 완료 후 will-change 속성 제거
+          if (modalImageRef.current) {
+            modalImageRef.current.style.willChange = 'auto';
+          }
+        }
+      });
+    } else {
+      // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
+      setCurrentImageIndex(newIndex);
+      setIsSliding(false);
+      setSlideDirection('');
+    }
+  };
+
   const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex > 0 ? prevIndex - 1 : images.length - 1
-    );
+    if (isSliding) return;
+    const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1;
+    
+    if (isModalOpen) {
+      slideToImage(newIndex, 'right');
+    } else {
+      setCurrentImageIndex(newIndex);
+    }
   };
 
   const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex < images.length - 1 ? prevIndex + 1 : 0
-    );
+    if (isSliding) return;
+    const newIndex = currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0;
+    
+    if (isModalOpen) {
+      slideToImage(newIndex, 'left');
+    } else {
+      setCurrentImageIndex(newIndex);
+    }
   };
 
   const handleImageClick = () => {
@@ -41,9 +145,103 @@ function GallerySection() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIsSliding(false);
+    setSlideDirection('');
+    setIsTouchMove(false);
+    setIsMultiTouch(false);
+    setIsPinchZoom(false);
+    setShowCounter(true);
+    
+    // 타이머 정리
+    if (counterTimerRef.current) {
+      clearTimeout(counterTimerRef.current);
+      counterTimerRef.current = null;
+    }
+  };
+
+  // 모달 배경 클릭 핸들러 (터치 이벤트와 구분)
+  const handleModalBackgroundClick = (e) => {
+    // 터치 이동이나 핀치 줌이 있었다면 클릭으로 처리하지 않음
+    if (isTouchMove || isPinchZoom) {
+      setIsTouchMove(false);
+      setIsPinchZoom(false);
+      return;
+    }
+    
+    // 이벤트 대상이 모달 배경인 경우에만 닫기
+    if (e.target === e.currentTarget) {
+      handleCloseModal();
+    }
+  };
+
+  // 터치 시작 핸들러
+  const onTouchStart = (e) => {
+    setIsTouchMove(false);
+    
+    // 멀티터치 감지 (핀치 줌)
+    if (e.touches && e.touches.length > 1) {
+      setIsMultiTouch(true);
+      setIsPinchZoom(true);
+      return;
+    }
+    
+    setIsMultiTouch(false);
+    
+    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
+    setTouchEnd(null); // 이전 터치 이벤트 리셋
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  // 터치 이동 핸들러
+  const onTouchMove = (e) => {
+    setIsTouchMove(true);
+    
+    // 멀티터치 중이면 스와이프 처리하지 않음
+    if (e.touches && e.touches.length > 1) {
+      setIsMultiTouch(true);
+      setIsPinchZoom(true);
+      return;
+    }
+    
+    // 핀치 줌 상태에서는 스와이프 처리하지 않음
+    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom || isMultiTouch) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  // 터치 종료 핸들러
+  const onTouchEnd = (e) => {
+    // 터치가 완전히 끝났는지 확인 (모든 손가락이 떨어졌는지)
+    if (e.touches && e.touches.length > 0) {
+      return; // 아직 터치가 남아있음
+    }
+    
+    // 멀티터치였다면 핀치 줌 상태 해제
+    if (isMultiTouch || isPinchZoom) {
+      setIsMultiTouch(false);
+      // 핀치 줌 상태는 조금 더 유지 (연속 핀치 방지)
+      setTimeout(() => {
+        setIsPinchZoom(false);
+      }, 100);
+      return;
+    }
+    
+    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextImage();
+    } else if (isRightSwipe) {
+      handlePrevImage();
+    }
   };
 
   const handleKeyDown = (e) => {
+    if (isSliding) return;
+    
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       handlePrevImage();
@@ -77,8 +275,6 @@ function GallerySection() {
     e.preventDefault();
     return false;
   };
-
-
 
   // 이미지 로드 후 보호 속성 추가
   const handleImageLoad = (e) => {
@@ -260,6 +456,20 @@ function GallerySection() {
     };
   }, [isModalOpen]);
 
+  // 모달이 열릴 때 카운터 표시 및 타이머 시작
+  useEffect(() => {
+    if (isModalOpen) {
+      showCounterWithTimer();
+    }
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      if (counterTimerRef.current) {
+        clearTimeout(counterTimerRef.current);
+      }
+    };
+  }, [isModalOpen]);
+
   return (
     <div 
       className={styles.container} 
@@ -276,6 +486,7 @@ function GallerySection() {
             className={styles.navButton} 
             onClick={handlePrevImage}
             aria-label="이전 이미지"
+            disabled={isSliding}
           >
             <IoIosArrowBack />
           </button>
@@ -310,6 +521,7 @@ function GallerySection() {
             className={styles.navButton} 
             onClick={handleNextImage}
             aria-label="다음 이미지"
+            disabled={isSliding}
           >
             <IoIosArrowForward />
           </button>
@@ -320,11 +532,16 @@ function GallerySection() {
       {isModalOpen && createPortal(
         <div 
           className={styles.modal} 
-          onClick={handleCloseModal}
+          onClick={handleModalBackgroundClick}
           onContextMenu={handleContextMenu}
           onDragStart={handleDragStart}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div 
+            className={styles.modalContent}
+          >
             <button 
               className={styles.closeButton} 
               onClick={handleCloseModal}
@@ -338,25 +555,31 @@ function GallerySection() {
               onClick={handlePrevImage}
               style={{ left: '20px' }}
               aria-label="이전 이미지"
+              disabled={isSliding}
             >
               <IoIosArrowBack />
             </button>
             
             <img
+              ref={modalImageRef}
               src={images[currentImageIndex].src}
               alt={images[currentImageIndex].alt}
-              className={styles.modalImage}
+              className={`${styles.modalImage} ${isSliding ? styles.sliding : ''}`}
               draggable="false"
               onLoad={handleImageLoad}
               onContextMenu={handleContextMenu}
               onDragStart={handleDragStart}
-                             style={{
-                 userSelect: 'none',
-                 WebkitUserSelect: 'none',
-                 MozUserSelect: 'none',
-                 msUserSelect: 'none',
-                 pointerEvents: 'none'
-               }}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none',
+                pointerEvents: 'auto',
+                touchAction: 'pinch-zoom'
+              }}
             />
             
             <button 
@@ -364,11 +587,12 @@ function GallerySection() {
               onClick={handleNextImage}
               style={{ right: '20px' }}
               aria-label="다음 이미지"
+              disabled={isSliding}
             >
               <IoIosArrowForward />
             </button>
 
-            <div className={styles.modalImageCounter}>
+            <div className={`${styles.modalImageCounter} ${showCounter ? styles.counterVisible : styles.counterHidden}`}>
               {currentImageIndex + 1} / {images.length}
             </div>
           </div>

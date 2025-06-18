@@ -235,6 +235,9 @@
   margin: 0;
   padding: 0;
   animation: fadeIn 0.3s ease;
+  /* 터치 최적화 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes fadeIn {
@@ -250,13 +253,18 @@
   position: relative;
   max-width: 95vw;
   max-height: 95vh;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   box-sizing: border-box;
+  /* 터치 최적화 */
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  /* 클릭 이벤트가 배경으로 전달되도록 */
+  pointer-events: none;
 }
 
 .modalImage {
@@ -278,6 +286,24 @@
   -o-user-drag: none;
   user-drag: none;
   pointer-events: none;
+  /* 터치 최적화 - 핀치 줌 허용 */
+  touch-action: pinch-zoom;
+  -webkit-tap-highlight-color: transparent;
+  /* 레이어 분리 - 버튼들과 독립적으로 처리 */
+  position: relative;
+  z-index: 5;
+  /* GPU 가속 최적화 */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* 슬라이딩 중일 때의 스타일 */
+.modalImage.sliding {
+  transition: none; /* GSAP이 제어하므로 CSS 트랜지션 비활성화 */
 }
 
 @keyframes zoomIn {
@@ -308,12 +334,14 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
-  z-index: 10;
+  z-index: 15;
   /* 터치 기기에서 하이라이트 방지 */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  /* 클릭 가능하도록 활성화 */
+  pointer-events: auto;
 }
 
 /* 닫기 버튼 아이콘 스타일 */
@@ -376,6 +404,10 @@
   line-height: 1;
   padding: 0;
   margin: 0;
+  /* 이미지보다 위에 표시 */
+  z-index: 10;
+  /* 클릭 가능하도록 활성화 */
+  pointer-events: auto;
 }
 
 /* 모달 아이콘 스타일 */
@@ -413,7 +445,7 @@
 
 .modalImageCounter {
   position: absolute;
-  bottom: env(safe-area-inset-bottom, 80px);
+  bottom: env(safe-area-inset-bottom, 40px);
   left: 50%;
   transform: translateX(-50%);
   color: white;
@@ -422,45 +454,28 @@
   background: rgba(0, 0, 0, 0.6);
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  z-index: 11;
+  z-index: 12;
   /* 주소창 변화에 영향받지 않도록 고정 */
-  bottom: calc(env(safe-area-inset-bottom) + 80px);
+  bottom: calc(env(safe-area-inset-bottom) + 40px);
+  /* 클릭 이벤트가 배경으로 전달되도록 */
+  pointer-events: none;
+  /* 애니메이션 속성 */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 카운터 표시 상태 */
+.counterVisible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 카운터 숨김 상태 */
+.counterHidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 
 /* 반응형 디자인 */
-@media (min-width: 768px) {
-  .container {
-    padding: 4rem 2rem;
-  }
-
-  .title {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-  }
-
-  .polaroidFrame {
-    max-width: 800px;
-    padding: 1.5rem 1.5rem 4rem 1.5rem;
-  }
-
-  .polaroidCaption {
-    font-size: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  .navButton {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    font-size: 18px;
-  }
-
-  .carouselContainer {
-    gap: 1.5rem;
-  }
-}
-
 @media (max-width: 768px) {
   .carouselContainer {
     gap: 0.8rem;
@@ -535,22 +550,41 @@
 
   .modalImageCounter {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 70px);
+    bottom: calc(env(safe-area-inset-bottom) + 30px);
     font-size: 0.9rem;
     padding: 0.4rem 0.8rem;
+  }
+
+  .counterVisible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .counterHidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
   }
   
   .modalContent {
     max-width: 100vw;
     max-height: 100vh;
     padding: 1rem;
+    /* 모바일 스와이프 개선 */
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
   }
   
   .modalImage {
     width: 100%;
     max-width: 100%;
     object-fit: contain;
+    /* 모바일 터치 최적화 - 핀치 줌 허용 */
+    touch-action: pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
   }
+
+
 }
 
 @media (max-width: 480px) {
@@ -623,8 +657,18 @@
   
   .modalImageCounter {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 60px);
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
     font-size: 0.8rem;
     padding: 0.3rem 0.6rem;
+  }
+
+  .counterVisible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .counterHidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
   }
 }
