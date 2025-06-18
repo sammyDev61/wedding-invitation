@@ -78,11 +78,7 @@ function GallerySection() {
     return false;
   };
 
-  // 선택 방지 (CSS로 처리하므로 함수는 유지하되 사용하지 않음)
-  const handleSelectStart = (e) => {
-    e.preventDefault();
-    return false;
-  };
+
 
   // 이미지 로드 후 보호 속성 추가
   const handleImageLoad = (e) => {
