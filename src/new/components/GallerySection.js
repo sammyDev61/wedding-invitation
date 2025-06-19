@@ -47,6 +47,34 @@ function GallerySection() {
            window.innerWidth <= 768;
   };
 
+  // 카카오 웹뷰 감지 함수
+  const isKakaoWebView = () => {
+    return /KAKAOTALK/i.test(navigator.userAgent);
+  };
+
+  // 네이버 웹뷰 감지 함수 (추가로 포함)
+  const isNaverWebView = () => {
+    return /NAVER/i.test(navigator.userAgent);
+  };
+
+  // 웹뷰 환경 감지
+  const isWebView = () => {
+    return isKakaoWebView() || isNaverWebView();
+  };
+
+  // 디버깅용 - 환경 정보 출력 (개발 시에만)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Browser Environment:', {
+        userAgent: navigator.userAgent,
+        isKakaoWebView: isKakaoWebView(),
+        isNaverWebView: isNaverWebView(),
+        isWebView: isWebView(),
+        isMobile: isMobileDevice()
+      });
+    }
+  }, []);
+
   // 스와이프 감지 최소 거리
   const minSwipeDistance = 50;
 
@@ -76,51 +104,94 @@ function GallerySection() {
     
     // 애니메이션 실행
     if (modalImageRef.current) {
-      const slideInDistance = direction === 'left' ? '100%' : '-100%';
-      
-      // 애니메이션 시작 전 will-change 속성 설정
-      modalImageRef.current.style.willChange = 'transform, opacity';
-      
-      // 이미지를 완전히 숨김 (즉시)
-      gsap.set(modalImageRef.current, {
-        opacity: 0,
-        scale: 0.9
-      });
-      
-      // 짧은 지연 후 이미지 인덱스 변경
-      setTimeout(() => {
-        setCurrentImageIndex(newIndex);
+      // 웹뷰 환경에서는 부드러운 페이드 애니메이션 사용
+      if (isWebView()) {
+        // 애니메이션 시작 전 will-change 속성 설정
+        modalImageRef.current.style.willChange = 'opacity, transform';
         
-        // 한 프레임 더 기다린 후 애니메이션 시작
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            if (modalImageRef.current) {
-              // 새 이미지를 반대편에 배치
-              gsap.set(modalImageRef.current, {
-                x: slideInDistance,
-                opacity: 0,
-                scale: 0.9
-              });
-              
-              // 새 이미지를 슬라이드 인
-              gsap.to(modalImageRef.current, {
-                x: 0,
-                opacity: 1,
-                scale: 1,
-                duration: 0.3,
-                ease: "power2.out",
-                onComplete: () => {
-                  setIsSliding(false);
-                  // 애니메이션 완료 후 will-change 속성 제거
-                  if (modalImageRef.current) {
-                    modalImageRef.current.style.willChange = 'auto';
+        // 페이드 아웃 + 살짝 축소
+        gsap.to(modalImageRef.current, {
+          opacity: 0,
+          scale: 0.95,
+          duration: 0.2,
+          ease: "power2.inOut",
+          onComplete: () => {
+            setCurrentImageIndex(newIndex);
+            
+            // 짧은 지연 후 페이드 인
+            setTimeout(() => {
+              if (modalImageRef.current) {
+                // 시작 상태 설정
+                gsap.set(modalImageRef.current, {
+                  opacity: 0,
+                  scale: 1.05
+                });
+                
+                // 페이드 인 + 살짝 확대에서 정상 크기로
+                gsap.to(modalImageRef.current, {
+                  opacity: 1,
+                  scale: 1,
+                  duration: 0.25,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    setIsSliding(false);
+                    if (modalImageRef.current) {
+                      modalImageRef.current.style.willChange = 'auto';
+                    }
                   }
-                }
-              });
-            }
-          });
+                });
+              }
+            }, 30);
+          }
         });
-      }, 50); // 50ms 지연으로 확실한 상태 변경 보장
+      } else {
+        // 일반 브라우저에서는 기존 슬라이드 애니메이션 사용
+        const slideInDistance = direction === 'left' ? '100%' : '-100%';
+        
+        // 애니메이션 시작 전 will-change 속성 설정
+        modalImageRef.current.style.willChange = 'transform, opacity';
+        
+        // 이미지를 완전히 숨김 (즉시)
+        gsap.set(modalImageRef.current, {
+          opacity: 0,
+          scale: 0.9
+        });
+        
+        // 짧은 지연 후 이미지 인덱스 변경
+        setTimeout(() => {
+          setCurrentImageIndex(newIndex);
+          
+          // 한 프레임 더 기다린 후 애니메이션 시작
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (modalImageRef.current) {
+                // 새 이미지를 반대편에 배치
+                gsap.set(modalImageRef.current, {
+                  x: slideInDistance,
+                  opacity: 0,
+                  scale: 0.9
+                });
+                
+                // 새 이미지를 슬라이드 인
+                gsap.to(modalImageRef.current, {
+                  x: 0,
+                  opacity: 1,
+                  scale: 1,
+                  duration: 0.3,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    setIsSliding(false);
+                    // 애니메이션 완료 후 will-change 속성 제거
+                    if (modalImageRef.current) {
+                      modalImageRef.current.style.willChange = 'auto';
+                    }
+                  }
+                });
+              }
+            });
+          });
+        }, 50); // 50ms 지연으로 확실한 상태 변경 보장
+      }
     } else {
       // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
       setCurrentImageIndex(newIndex);
@@ -200,6 +271,11 @@ function GallerySection() {
     if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
     setTouchEnd(null); // 이전 터치 이벤트 리셋
     setTouchStart(e.targetTouches[0].clientX);
+    
+    // 웹뷰에서는 추가 안전장치
+    if (isWebView()) {
+      e.preventDefault();
+    }
   };
 
   // 터치 이동 핸들러
