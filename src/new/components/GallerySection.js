@@ -81,31 +81,46 @@ function GallerySection() {
       // 애니메이션 시작 전 will-change 속성 설정
       modalImageRef.current.style.willChange = 'transform, opacity';
       
-      // 이미지 인덱스를 먼저 변경
-      setCurrentImageIndex(newIndex);
-      
-      // 새 이미지를 즉시 반대편에 배치
+      // 이미지를 완전히 숨김 (즉시)
       gsap.set(modalImageRef.current, {
-        x: slideInDistance,
         opacity: 0,
         scale: 0.9
       });
       
-      // 새 이미지를 슬라이드 인
-      gsap.to(modalImageRef.current, {
-        x: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 0.35,
-        ease: "power2.out",
-        onComplete: () => {
-          setIsSliding(false);
-          // 애니메이션 완료 후 will-change 속성 제거
-          if (modalImageRef.current) {
-            modalImageRef.current.style.willChange = 'auto';
-          }
-        }
-      });
+      // 짧은 지연 후 이미지 인덱스 변경
+      setTimeout(() => {
+        setCurrentImageIndex(newIndex);
+        
+        // 한 프레임 더 기다린 후 애니메이션 시작
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (modalImageRef.current) {
+              // 새 이미지를 반대편에 배치
+              gsap.set(modalImageRef.current, {
+                x: slideInDistance,
+                opacity: 0,
+                scale: 0.9
+              });
+              
+              // 새 이미지를 슬라이드 인
+              gsap.to(modalImageRef.current, {
+                x: 0,
+                opacity: 1,
+                scale: 1,
+                duration: 0.3,
+                ease: "power2.out",
+                onComplete: () => {
+                  setIsSliding(false);
+                  // 애니메이션 완료 후 will-change 속성 제거
+                  if (modalImageRef.current) {
+                    modalImageRef.current.style.willChange = 'auto';
+                  }
+                }
+              });
+            }
+          });
+        });
+      }, 50); // 50ms 지연으로 확실한 상태 변경 보장
     } else {
       // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
       setCurrentImageIndex(newIndex);
