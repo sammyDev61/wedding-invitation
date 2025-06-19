@@ -267,6 +267,55 @@
   pointer-events: none;
 }
 
+/* PC에서 모달 크기 제한 - 이미지 비율(3:4) 고려 */
+@media (min-width: 769px) {
+  .modalContent {
+    max-width: 680px;
+    max-height: 900px;
+    /* 이미지와 동일한 크기로 설정하여 버튼이 이미지 위에 오버레이 */
+    padding: 0;
+  }
+  
+  .modalImage {
+    max-width: 680px;
+    max-height: 900px;
+    /* 실제 이미지 크기 - 3:4 비율 유지 */
+    width: auto;
+    height: auto;
+  }
+  
+  /* PC에서 버튼들이 이미지 안쪽에 위치하도록 */
+  .closeButton {
+    top: 10px !important;
+    right: 15px !important;
+  }
+  
+  
+  .modalNavButton[style*="left"] {
+    left: 15px !important;
+  }
+  
+  .modalNavButton[style*="right"] {
+    right: 15px !important;
+  }
+}
+
+/* 큰 화면에서는 조금 더 크게 */
+@media (min-width: 1200px) {
+  .modalContent {
+    max-width: 750px;
+    max-height: 1000px;
+    /* 이미지와 동일한 크기 */
+    padding: 0;
+  }
+  
+  .modalImage {
+    max-width: 750px;
+    max-height: 1000px;
+    /* 실제 이미지 크기 */
+  }
+}
+
 .modalImage {
   max-width: 100%;
   max-height: 100%;

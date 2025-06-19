@@ -20,7 +20,6 @@ function GallerySection() {
   
   // 애니메이션 관련 상태
   const [isSliding, setIsSliding] = useState(false);
-  const [slideDirection, setSlideDirection] = useState('');
   const modalImageRef = useRef(null);
 
   // 카운터 표시 관련 상태
@@ -28,7 +27,7 @@ function GallerySection() {
   const counterTimerRef = useRef(null);
 
   // 이미지 개수 설정 (필요시 변경 가능)
-  const TOTAL_IMAGES = 24;
+  const TOTAL_IMAGES = 15;
   
   // 카운터 자동 숨김 시간 (밀리초)
   const COUNTER_HIDE_DELAY = 1500;
@@ -71,7 +70,6 @@ function GallerySection() {
     if (isSliding) return;
     
     setIsSliding(true);
-    setSlideDirection(direction);
     
     // 이미지 변경 시 카운터 표시
     showCounterWithTimer();
@@ -102,7 +100,6 @@ function GallerySection() {
         ease: "power2.out",
         onComplete: () => {
           setIsSliding(false);
-          setSlideDirection('');
           // 애니메이션 완료 후 will-change 속성 제거
           if (modalImageRef.current) {
             modalImageRef.current.style.willChange = 'auto';
@@ -113,7 +110,6 @@ function GallerySection() {
       // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
       setCurrentImageIndex(newIndex);
       setIsSliding(false);
-      setSlideDirection('');
     }
   };
 
@@ -146,7 +142,6 @@ function GallerySection() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setIsSliding(false);
-    setSlideDirection('');
     setIsTouchMove(false);
     setIsMultiTouch(false);
     setIsPinchZoom(false);
