@@ -2,7 +2,7 @@
   "name": "wedding-invitation",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://sammy-jaewon.github.io",
+  "homepage": "https://sammydev61.github.io/wedding",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@testing-library/jest-dom": "^5.17.0",
