@@ -21,6 +21,7 @@ function GallerySection() {
   // 이미지 확대 상태 관리
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [initialPinchDistance, setInitialPinchDistance] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [currentPinchDistance, setCurrentPinchDistance] = useState(null);
   
   // 애니메이션 관련 상태
