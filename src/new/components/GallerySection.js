@@ -577,6 +577,12 @@ function GallerySection() {
       e.preventDefault();
       return;
     }
+    
+    // 개발 환경에서는 개발자 도구 단축키 차단 비활성화
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+    
     // 개발자 도구 단축키 방지
     if (e.key === 'F12' || 
         (e.ctrlKey && e.shiftKey && e.key === 'I') ||
@@ -613,6 +619,11 @@ function GallerySection() {
 
   // 개발자 도구 감지 (Safari 호환성 개선)
   useEffect(() => {
+    // 개발 환경에서는 개발자 도구 감지 비활성화
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     // Safari 감지
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
@@ -663,6 +674,11 @@ function GallerySection() {
   // 이미지 보호를 위한 전역 이벤트 리스너
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
+      // 개발 환경에서는 개발자 도구 단축키 차단 비활성화
+      if (process.env.NODE_ENV === 'development') {
+        return;
+      }
+      
       if (e.key === 'F12' || 
           (e.ctrlKey && e.shiftKey && e.key === 'I') ||
           (e.ctrlKey && e.shiftKey && e.key === 'C') ||
@@ -675,6 +691,16 @@ function GallerySection() {
     };
 
     const handleGlobalContextMenu = (e) => {
+      // 개발 환경에서는 우클릭 차단 비활성화 (이미지는 여전히 보호)
+      if (process.env.NODE_ENV === 'development') {
+        // 이미지에 대해서만 우클릭 방지
+        if (e.target.tagName === 'IMG') {
+          e.preventDefault();
+          return false;
+        }
+        return;
+      }
+      
       e.preventDefault();
       return false;
     };

@@ -4,6 +4,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import MainSection from "../components/MainSection";
 import InfoSection from "../components/InfoSection";
 import GallerySection from "../components/GallerySection";
+import MapSection from "../components/MapSection";
 import SectionDivider from "../components/SectionDivider";
 import styles from "./styles/Home.module.css";
 
@@ -99,6 +100,8 @@ function Home() {
       <div ref={(el) => (sectionsRef.current[0] = el)}>
         <InfoSection />
       </div>
+      <SectionDivider />
+      <MapSection />
       <SectionDivider />
       <div ref={(el) => (sectionsRef.current[2] = el)}>
         <GallerySection />
