@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/wedding-invitation/static/css/main.1228e0a3.css",
-    "main.js": "/wedding-invitation/static/js/main.f73b93dd.js",
+    "main.css": "/wedding-invitation/static/css/main.36d4ea70.css",
+    "main.js": "/wedding-invitation/static/js/main.311dd216.js",
     "static/js/453.40063271.chunk.js": "/wedding-invitation/static/js/453.40063271.chunk.js",
     "static/media/main.jpg": "/wedding-invitation/static/media/main.d2e76dbd0a3ea425c2c1.jpg",
     "index.html": "/wedding-invitation/index.html",
-    "main.1228e0a3.css.map": "/wedding-invitation/static/css/main.1228e0a3.css.map",
-    "main.f73b93dd.js.map": "/wedding-invitation/static/js/main.f73b93dd.js.map",
+    "main.36d4ea70.css.map": "/wedding-invitation/static/css/main.36d4ea70.css.map",
+    "main.311dd216.js.map": "/wedding-invitation/static/js/main.311dd216.js.map",
     "453.40063271.chunk.js.map": "/wedding-invitation/static/js/453.40063271.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.1228e0a3.css",
-    "static/js/main.f73b93dd.js"
+    "static/css/main.36d4ea70.css",
+    "static/js/main.311dd216.js"
   ]
 }
