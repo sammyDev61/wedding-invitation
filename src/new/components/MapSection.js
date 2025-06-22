@@ -85,7 +85,7 @@ function MapSection() {
             >
               <MdContentCopy />
             </button>
-            {'- '}서울 종로구 자하문로 89
+            <br/><span className={styles.subText}>서울 종로구 자하문로 89</span>
             <button 
               className={styles.copyButton} 
               onClick={() => copyToClipboard('서울 종로구 자하문로 89')}
@@ -105,7 +105,7 @@ function MapSection() {
             >
               <MdContentCopy />
             </button>
-            {'- '}서울 종로구 효자동 196
+            <br/><span className={styles.subText}>서울 종로구 효자동 196</span>
             <button 
               className={styles.copyButton} 
               onClick={() => copyToClipboard('서울 종로구 효자동 196')}
