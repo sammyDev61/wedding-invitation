@@ -67,13 +67,19 @@ function MapSection() {
 
     gsap.registerPlugin(ScrollTrigger);
 
+    // ref 값들을 변수에 저장
+    const container = containerRef.current;
+    const title = titleRef.current;
+    const content = contentRef.current;
+    const map = mapRef.current;
+
     // 초기 상태 설정
-    gsap.set(titleRef.current, {
+    gsap.set(title, {
       opacity: 0,
       y: 50,
     });
 
-    gsap.set(contentRef.current.children, {
+    gsap.set(content.children, {
       opacity: 0,
       y: 30,
     });
@@ -81,20 +87,20 @@ function MapSection() {
     // 애니메이션 타임라인
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: containerRef.current,
+        trigger: container,
         start: "top 80%",
         end: "bottom 20%",
         toggleActions: "play none none reverse",
       },
     });
 
-    tl.to(titleRef.current, {
+    tl.to(title, {
       opacity: 1,
       y: 0,
       duration: 0.8,
       ease: "power2.out",
     })
-    .to(contentRef.current.children, {
+    .to(content.children, {
       opacity: 1,
       y: 0,
       duration: 0.6,
@@ -103,29 +109,30 @@ function MapSection() {
     }, "-=0.4");
 
     // 지도 CSS 클래스 애니메이션
-    if (mapRef.current) {
-      ScrollTrigger.create({
-        trigger: containerRef.current,
+    let mapScrollTrigger;
+    if (map) {
+      mapScrollTrigger = ScrollTrigger.create({
+        trigger: container,
         start: "top 80%",
         end: "bottom 20%",
         onEnter: () => {
-          if (mapRef.current) {
-            mapRef.current.classList.add(styles.mapVisible);
+          if (map) {
+            map.classList.add(styles.mapVisible);
           }
         },
         onLeave: () => {
-          if (mapRef.current) {
-            mapRef.current.classList.remove(styles.mapVisible);
+          if (map) {
+            map.classList.remove(styles.mapVisible);
           }
         },
         onEnterBack: () => {
-          if (mapRef.current) {
-            mapRef.current.classList.add(styles.mapVisible);
+          if (map) {
+            map.classList.add(styles.mapVisible);
           }
         },
         onLeaveBack: () => {
-          if (mapRef.current) {
-            mapRef.current.classList.remove(styles.mapVisible);
+          if (map) {
+            map.classList.remove(styles.mapVisible);
           }
         },
       });
@@ -133,11 +140,9 @@ function MapSection() {
 
     return () => {
       tl.kill();
-      ScrollTrigger.getAll().forEach(trigger => {
-        if (trigger.trigger === containerRef.current) {
-          trigger.kill();
-        }
-      });
+      if (mapScrollTrigger) {
+        mapScrollTrigger.kill();
+      }
     };
   }, []);
 
