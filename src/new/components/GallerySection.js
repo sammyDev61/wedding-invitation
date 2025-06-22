@@ -21,7 +21,6 @@ function GallerySection() {
   // 이미지 확대 상태 관리
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [initialPinchDistance, setInitialPinchDistance] = useState(null);
-  const [currentPinchDistance, setCurrentPinchDistance] = useState(null);
   
   // 애니메이션 관련 상태
   const [isSliding, setIsSliding] = useState(false);
@@ -41,7 +40,7 @@ function GallerySection() {
   const images = Array.from({ length: TOTAL_IMAGES }, (_, index) => {
     const imageNumber = (index + 1).toString().padStart(3, '0');
     return {
-      src: `/new_gallery/${imageNumber}.jpg`,
+      src: `${process.env.PUBLIC_URL}/new_gallery/${imageNumber}.jpg`,
       alt: `갤러리 이미지 ${index + 1}`,
     };
   });
@@ -69,35 +68,53 @@ function GallerySection() {
 
   // 초기 이미지 프리로딩 (우선순위 기반)
   useEffect(() => {
+    let isMounted = true;
+    let backgroundTimeout;
+    
     const preloadInitialImages = async () => {
-      // 현재 이미지부터 우선 로드
-      await preloadImage(images[currentImageIndex].src);
-      
-      // 주변 이미지들 순차적으로 로드
-      const loadPromises = [];
-      for (let i = 1; i <= 3; i++) {
-        const prevIndex = (currentImageIndex - i + images.length) % images.length;
-        const nextIndex = (currentImageIndex + i) % images.length;
+      try {
+        if (!isMounted) return;
         
-        loadPromises.push(preloadImage(images[prevIndex].src));
-        loadPromises.push(preloadImage(images[nextIndex].src));
-      }
-      
-      // 나머지 이미지들은 백그라운드에서 천천히 로드
-      setTimeout(async () => {
-        for (let i = 0; i < images.length; i++) {
-          if (!preloadedImages.has(images[i].src)) {
-            await preloadImage(images[i].src);
-            // 각 이미지 사이에 작은 지연으로 메인 스레드 블로킹 방지
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
+        // 현재 이미지부터 우선 로드
+        await preloadImage(images[currentImageIndex].src);
+        
+        if (!isMounted) return;
+        
+        // 주변 이미지들 순차적으로 로드
+        for (let i = 1; i <= 3; i++) {
+          const prevIndex = (currentImageIndex - i + images.length) % images.length;
+          const nextIndex = (currentImageIndex + i) % images.length;
+          
+          // 비동기적으로 백그라운드에서 로드 (await 하지 않음)
+          preloadImage(images[prevIndex].src).catch(() => {});
+          preloadImage(images[nextIndex].src).catch(() => {});
         }
-      }, 1000);
+        
+        // 나머지 이미지들은 백그라운드에서 천천히 로드
+        backgroundTimeout = setTimeout(async () => {
+          for (let i = 0; i < images.length; i++) {
+            if (!isMounted) break;
+            if (!preloadedImages.has(images[i].src)) {
+              await preloadImage(images[i].src);
+              // 각 이미지 사이에 작은 지연으로 메인 스레드 블로킹 방지
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('Preload initial images error:', error);
+      }
     };
 
     preloadInitialImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 컴포넌트 마운트 시 한 번만 실행
+    
+    return () => {
+      isMounted = false;
+      if (backgroundTimeout) {
+        clearTimeout(backgroundTimeout);
+      }
+    };
+  }, [preloadImage, images, currentImageIndex, preloadedImages]);
 
   // 현재 이미지 변경 시 주변 이미지 즉시 프리로딩
   useEffect(() => {
@@ -139,156 +156,220 @@ function GallerySection() {
   // 디버깅용 - 환경 정보 출력 (개발 시에만)
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Gallery Environment:', {
-        userAgent: navigator.userAgent,
-        isKakaoWebView: isKakaoWebView(),
-        isNaverWebView: isNaverWebView(),
-        isWebView: isWebView(),
-        isMobile: isMobileDevice(),
-        totalImages: images.length,
-        preloadedCount: preloadedImages.size
-      });
+      try {
+        const debugInfo = {
+          userAgent: navigator.userAgent || 'unknown',
+          isKakaoWebView: isKakaoWebView(),
+          isNaverWebView: isNaverWebView(),
+          isWebView: isWebView(),
+          isMobile: isMobileDevice(),
+          totalImages: images.length,
+          preloadedCount: preloadedImages.size,
+          publicUrl: process.env.PUBLIC_URL || 'empty',
+          sampleImageSrc: images[0]?.src || 'no images'
+        };
+        console.log('Gallery Environment:', debugInfo);
+      } catch (error) {
+        console.error('Debug info error:', error);
+      }
     }
-  }, [preloadedImages.size, images.length, isKakaoWebView, isNaverWebView, isWebView, isMobileDevice]);
+  }, [preloadedImages.size, images, isKakaoWebView, isNaverWebView, isWebView, isMobileDevice]);
 
   // 스와이프 감지 최소 거리
   const minSwipeDistance = 50;
 
   // 두 터치 포인트 간의 거리 계산
   const getTouchDistance = (touches) => {
-    if (touches.length < 2) return 0;
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
+    try {
+      if (!touches || touches.length < 2) return 0;
+      if (!touches[0] || !touches[1]) return 0;
+      
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    } catch (error) {
+      console.error('Get touch distance error:', error);
+      return 0;
+    }
   };
 
   // 이미지 확대 상태 감지 (transform scale 기반)
   const checkImageZoomState = () => {
-    if (modalImageRef.current) {
-      const computedStyle = window.getComputedStyle(modalImageRef.current);
-      const matrix = new DOMMatrix(computedStyle.transform);
-      const scale = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-      setIsImageZoomed(scale > 1.1); // 10% 이상 확대되면 줌 상태로 간주
+    try {
+      if (modalImageRef.current && window.getComputedStyle) {
+        const computedStyle = window.getComputedStyle(modalImageRef.current);
+        if (computedStyle && computedStyle.transform) {
+          const matrix = new DOMMatrix(computedStyle.transform);
+          const scale = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
+          setIsImageZoomed(scale > 1.1); // 10% 이상 확대되면 줌 상태로 간주
+        }
+      }
+    } catch (error) {
+      console.error('Check image zoom state error:', error);
     }
   };
 
   // 카운터 표시 및 타이머 관리
   const showCounterWithTimer = () => {
-    setShowCounter(true);
-    
-    // 기존 타이머가 있으면 제거
-    if (counterTimerRef.current) {
-      clearTimeout(counterTimerRef.current);
+    try {
+      setShowCounter(true);
+      
+      // 기존 타이머가 있으면 제거
+      if (counterTimerRef.current) {
+        clearTimeout(counterTimerRef.current);
+        counterTimerRef.current = null;
+      }
+      
+      // 새 타이머 설정
+      counterTimerRef.current = setTimeout(() => {
+        try {
+          setShowCounter(false);
+        } catch (error) {
+          console.error('Counter timer error:', error);
+        }
+      }, COUNTER_HIDE_DELAY);
+    } catch (error) {
+      console.error('Show counter with timer error:', error);
     }
-    
-    // 새 타이머 설정
-    counterTimerRef.current = setTimeout(() => {
-      setShowCounter(false);
-    }, COUNTER_HIDE_DELAY);
   };
 
   // 슬라이드 애니메이션을 포함한 이미지 변경 함수
   const slideToImage = (newIndex, direction) => {
-    if (isSliding) return;
-    
-    setIsSliding(true);
-    
-    // 이미지 변경 시 카운터 표시
-    showCounterWithTimer();
-    
-    // 애니메이션 실행
-    if (modalImageRef.current) {
-      // 웹뷰 환경에서는 부드러운 페이드 애니메이션 사용
-      if (isWebView()) {
-        // 애니메이션 시작 전 will-change 속성 설정
-        modalImageRef.current.style.willChange = 'opacity, transform';
-        
-        // 페이드 아웃 + 살짝 축소
-        gsap.to(modalImageRef.current, {
-          opacity: 0,
-          scale: 0.95,
-          duration: 0.2,
-          ease: "power2.inOut",
-          onComplete: () => {
-            setCurrentImageIndex(newIndex);
-            
-            // 짧은 지연 후 페이드 인
-            setTimeout(() => {
-              if (modalImageRef.current) {
-                // 시작 상태 설정
-                gsap.set(modalImageRef.current, {
-                  opacity: 0,
-                  scale: 1.05
-                });
-                
-                // 페이드 인 + 살짝 확대에서 정상 크기로
-                gsap.to(modalImageRef.current, {
-                  opacity: 1,
-                  scale: 1,
-                  duration: 0.25,
-                  ease: "power2.out",
-                  onComplete: () => {
-                    setIsSliding(false);
-                    if (modalImageRef.current) {
-                      modalImageRef.current.style.willChange = 'auto';
-                    }
-                  }
-                });
-              }
-            }, 30);
-          }
-        });
-      } else {
-        // 일반 브라우저에서는 기존 슬라이드 애니메이션 사용
-        const slideInDistance = direction === 'left' ? '100%' : '-100%';
-        
-        // 애니메이션 시작 전 will-change 속성 설정
-        modalImageRef.current.style.willChange = 'transform, opacity';
-        
-        // 이미지를 완전히 숨김 (즉시)
-        gsap.set(modalImageRef.current, {
-          opacity: 0,
-          scale: 0.9
-        });
-        
-        // 짧은 지연 후 이미지 인덱스 변경
-        setTimeout(() => {
-          setCurrentImageIndex(newIndex);
+    try {
+      if (isSliding) return;
+      
+      setIsSliding(true);
+      
+      // 이미지 변경 시 카운터 표시
+      showCounterWithTimer();
+      
+      // 애니메이션 실행
+      if (modalImageRef.current && gsap) {
+        // 웹뷰 환경에서는 부드러운 페이드 애니메이션 사용
+        if (isWebView()) {
+          // 애니메이션 시작 전 will-change 속성 설정
+          modalImageRef.current.style.willChange = 'opacity, transform';
           
-          // 한 프레임 더 기다린 후 애니메이션 시작
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if (modalImageRef.current) {
-                // 새 이미지를 반대편에 배치
-                gsap.set(modalImageRef.current, {
-                  x: slideInDistance,
-                  opacity: 0,
-                  scale: 0.9
-                });
+          // 페이드 아웃 + 살짝 축소
+          gsap.to(modalImageRef.current, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.2,
+            ease: "power2.inOut",
+            onComplete: () => {
+              try {
+                setCurrentImageIndex(newIndex);
                 
-                // 새 이미지를 슬라이드 인
-                gsap.to(modalImageRef.current, {
-                  x: 0,
-                  opacity: 1,
-                  scale: 1,
-                  duration: 0.3,
-                  ease: "power2.out",
-                  onComplete: () => {
-                    setIsSliding(false);
-                    // 애니메이션 완료 후 will-change 속성 제거
-                    if (modalImageRef.current) {
-                      modalImageRef.current.style.willChange = 'auto';
+                // 짧은 지연 후 페이드 인
+                setTimeout(() => {
+                  try {
+                    if (modalImageRef.current && gsap) {
+                      // 시작 상태 설정
+                      gsap.set(modalImageRef.current, {
+                        opacity: 0,
+                        scale: 1.05
+                      });
+                      
+                      // 페이드 인 + 살짝 확대에서 정상 크기로
+                      gsap.to(modalImageRef.current, {
+                        opacity: 1,
+                        scale: 1,
+                        duration: 0.25,
+                        ease: "power2.out",
+                        onComplete: () => {
+                          try {
+                            setIsSliding(false);
+                            if (modalImageRef.current) {
+                              modalImageRef.current.style.willChange = 'auto';
+                            }
+                          } catch (error) {
+                            console.error('Fade in complete error:', error);
+                            setIsSliding(false);
+                          }
+                        }
+                      });
                     }
+                  } catch (error) {
+                    console.error('Fade in timeout error:', error);
+                    setIsSliding(false);
+                  }
+                }, 30);
+              } catch (error) {
+                console.error('Fade out complete error:', error);
+                setIsSliding(false);
+              }
+            }
+          });
+        } else {
+          // 일반 브라우저에서는 기존 슬라이드 애니메이션 사용
+          const slideInDistance = direction === 'left' ? '100%' : '-100%';
+          
+          // 애니메이션 시작 전 will-change 속성 설정
+          modalImageRef.current.style.willChange = 'transform, opacity';
+          
+          // 이미지를 완전히 숨김 (즉시)
+          gsap.set(modalImageRef.current, {
+            opacity: 0,
+            scale: 0.9
+          });
+          
+          // 짧은 지연 후 이미지 인덱스 변경
+          setTimeout(() => {
+            try {
+              setCurrentImageIndex(newIndex);
+              
+              // 한 프레임 더 기다린 후 애니메이션 시작
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  try {
+                    if (modalImageRef.current && gsap) {
+                      // 새 이미지를 반대편에 배치
+                      gsap.set(modalImageRef.current, {
+                        x: slideInDistance,
+                        opacity: 0,
+                        scale: 0.9
+                      });
+                      
+                      // 새 이미지를 슬라이드 인
+                      gsap.to(modalImageRef.current, {
+                        x: 0,
+                        opacity: 1,
+                        scale: 1,
+                        duration: 0.3,
+                        ease: "power2.out",
+                        onComplete: () => {
+                          try {
+                            setIsSliding(false);
+                            // 애니메이션 완료 후 will-change 속성 제거
+                            if (modalImageRef.current) {
+                              modalImageRef.current.style.willChange = 'auto';
+                            }
+                          } catch (error) {
+                            console.error('Slide in complete error:', error);
+                            setIsSliding(false);
+                          }
+                        }
+                      });
+                    }
+                  } catch (error) {
+                    console.error('Slide animation frame error:', error);
+                    setIsSliding(false);
                   }
                 });
-              }
-            });
-          });
-        }, 50);
+              });
+            } catch (error) {
+              console.error('Slide timeout error:', error);
+              setIsSliding(false);
+            }
+          }, 50);
+        }
+      } else {
+        // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
+        setCurrentImageIndex(newIndex);
+        setIsSliding(false);
       }
-    } else {
-      // 모달이 열려있지 않은 경우 애니메이션 없이 바로 변경
-      setCurrentImageIndex(newIndex);
+    } catch (error) {
+      console.error('Slide to image error:', error);
       setIsSliding(false);
     }
   };
@@ -342,7 +423,6 @@ function GallerySection() {
     // 확대 상태 리셋
     setIsImageZoomed(false);
     setInitialPinchDistance(null);
-    setCurrentPinchDistance(null);
     
     // 타이머 정리
     if (counterTimerRef.current) {
@@ -353,266 +433,348 @@ function GallerySection() {
 
   // 모달 배경 클릭 핸들러 (모달 닫기 기능 비활성화)
   const handleModalBackgroundClick = (e) => {
-    // 모달 배경 클릭으로 모달 닫기 기능 제거
-    // 터치 상태만 리셋
-    if (isTouchMove || isPinchZoom) {
-      setIsTouchMove(false);
-      setIsPinchZoom(false);
+    try {
+      if (!e) return;
+      
+      // 모달 배경 클릭으로 모달 닫기 기능 제거
+      // 터치 상태만 리셋
+      if (isTouchMove || isPinchZoom) {
+        setIsTouchMove(false);
+        setIsPinchZoom(false);
+      }
+      
+      // 모든 이벤트 전파 차단으로 바깥 영역 터치 방지
+      if (e.preventDefault) e.preventDefault();
+      if (e.stopPropagation) e.stopPropagation();
+    } catch (error) {
+      console.error('Modal background click error:', error);
     }
-    
-    // 모든 이벤트 전파 차단으로 바깥 영역 터치 방지
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   // 터치 시작 핸들러
   const onTouchStart = (e) => {
-    // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
-    if (e.target.closest('.modal-image-zoom-allowed')) {
-      // 멀티터치만 감지하고 나머지는 브라우저가 처리
+    try {
+      // 이벤트 객체 검증
+      if (!e || !e.touches) return;
+      
+      // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
+      if (e.target && e.target.closest && e.target.closest('.modal-image-zoom-allowed')) {
+        // 멀티터치만 감지하고 나머지는 브라우저가 처리
+        if (e.touches && e.touches.length > 1) {
+          setIsMultiTouch(true);
+          setIsPinchZoom(true);
+          
+          const distance = getTouchDistance(e.touches);
+          setInitialPinchDistance(distance);
+        } else {
+          setIsMultiTouch(false);
+        }
+        return;
+      }
+      
+      // 모달이 열린 상태에서는 바깥 영역 터치 차단
+      if (isModalOpen && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      // 먼저 확대 상태를 체크
+      checkImageZoomState();
+      
+      setIsTouchMove(false);
+      
+      // 멀티터치 감지 (핀치 줌)
       if (e.touches && e.touches.length > 1) {
         setIsMultiTouch(true);
         setIsPinchZoom(true);
         
+        // 핀치 시작 거리 저장
         const distance = getTouchDistance(e.touches);
         setInitialPinchDistance(distance);
-        setCurrentPinchDistance(distance);
-      } else {
-        setIsMultiTouch(false);
+        
+        return;
       }
-      return;
-    }
-    
-    // 모달이 열린 상태에서는 바깥 영역 터치 차단
-    if (isModalOpen) {
-      e.stopPropagation();
-    }
-    
-    // 먼저 확대 상태를 체크
-    checkImageZoomState();
-    
-    setIsTouchMove(false);
-    
-    // 멀티터치 감지 (핀치 줌)
-    if (e.touches && e.touches.length > 1) {
-      setIsMultiTouch(true);
-      setIsPinchZoom(true);
       
-      // 핀치 시작 거리 저장
-      const distance = getTouchDistance(e.touches);
-      setInitialPinchDistance(distance);
-      setCurrentPinchDistance(distance);
+      setIsMultiTouch(false);
       
-      return;
-    }
-    
-    setIsMultiTouch(false);
-    
-    // 이미지가 확대된 상태에서는 모든 단일 터치 무시
-    if (isImageZoomed) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) {
-        e.stopImmediatePropagation();
+      // 이미지가 확대된 상태에서는 모든 단일 터치 무시
+      if (isImageZoomed) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) {
+          e.stopImmediatePropagation();
+        }
+        return;
       }
-      return;
-    }
-    
-    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
-    setTouchEnd(null); // 이전 터치 이벤트 리셋
-    setTouchStart(e.targetTouches[0].clientX);
-    
-    // 웹뷰에서는 추가 안전장치
-    if (isWebView()) {
-      e.preventDefault();
+      
+      if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
+      setTouchEnd(null); // 이전 터치 이벤트 리셋
+      
+      if (e.targetTouches && e.targetTouches[0]) {
+        setTouchStart(e.targetTouches[0].clientX);
+      }
+      
+      // 웹뷰에서는 추가 안전장치
+      if (isWebView() && e.preventDefault) {
+        e.preventDefault();
+      }
+    } catch (error) {
+      console.error('Touch start error:', error);
     }
   };
 
   // 터치 이동 핸들러
   const onTouchMove = (e) => {
-    // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
-    if (e.target.closest('.modal-image-zoom-allowed')) {
-      // 멀티터치 거리만 업데이트하고 나머지는 브라우저가 처리
+    try {
+      // 이벤트 객체 검증
+      if (!e || !e.touches) return;
+      
+      // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
+      if (e.target && e.target.closest && e.target.closest('.modal-image-zoom-allowed')) {
+        // 멀티터치 거리만 업데이트하고 나머지는 브라우저가 처리
+        if (e.touches && e.touches.length > 1) {
+          setIsMultiTouch(true);
+          setIsPinchZoom(true);
+          
+          const currentDistance = getTouchDistance(e.touches);
+          
+          if (initialPinchDistance && currentDistance > initialPinchDistance * 1.2) {
+            setIsImageZoomed(true);
+          }
+        }
+        return;
+      }
+      
+      // 모달이 열린 상태에서는 바깥 영역 터치 차단
+      if (isModalOpen && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      setIsTouchMove(true);
+      
+      // 멀티터치 중이면 스와이프 처리하지 않음
       if (e.touches && e.touches.length > 1) {
         setIsMultiTouch(true);
         setIsPinchZoom(true);
         
+        // 핀치 거리 업데이트 및 확대 상태 감지
         const currentDistance = getTouchDistance(e.touches);
-        setCurrentPinchDistance(currentDistance);
         
+        // 핀치 줌이 일정 비율 이상이면 확대 상태로 설정
         if (initialPinchDistance && currentDistance > initialPinchDistance * 1.2) {
           setIsImageZoomed(true);
         }
-      }
-      return;
-    }
-    
-    // 모달이 열린 상태에서는 바깥 영역 터치 차단
-    if (isModalOpen) {
-      e.stopPropagation();
-    }
-    
-    setIsTouchMove(true);
-    
-    // 멀티터치 중이면 스와이프 처리하지 않음
-    if (e.touches && e.touches.length > 1) {
-      setIsMultiTouch(true);
-      setIsPinchZoom(true);
-      
-      // 핀치 거리 업데이트 및 확대 상태 감지
-      const currentDistance = getTouchDistance(e.touches);
-      setCurrentPinchDistance(currentDistance);
-      
-      // 핀치 줌이 일정 비율 이상이면 확대 상태로 설정
-      if (initialPinchDistance && currentDistance > initialPinchDistance * 1.2) {
-        setIsImageZoomed(true);
+        
+        return;
       }
       
-      return;
-    }
-    
-    // 이미지가 확대된 상태에서는 모든 단일 터치 무시
-    if (isImageZoomed) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) {
-        e.stopImmediatePropagation();
+      // 이미지가 확대된 상태에서는 모든 단일 터치 무시
+      if (isImageZoomed) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) {
+          e.stopImmediatePropagation();
+        }
+        return;
       }
-      return;
+      
+      // 핀치 줌 상태에서는 스와이프 처리하지 않음
+      if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom || isMultiTouch) return;
+      
+      if (e.targetTouches && e.targetTouches[0]) {
+        setTouchEnd(e.targetTouches[0].clientX);
+      }
+    } catch (error) {
+      console.error('Touch move error:', error);
     }
-    
-    // 핀치 줌 상태에서는 스와이프 처리하지 않음
-    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom || isMultiTouch) return;
-    setTouchEnd(e.targetTouches[0].clientX);
   };
 
   // 터치 종료 핸들러
   const onTouchEnd = (e) => {
-    // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
-    if (e.target.closest('.modal-image-zoom-allowed')) {
-      // 터치가 완전히 끝났는지 확인
-      if (e.touches && e.touches.length === 0) {
-        // 멀티터치였다면 핀치 줌 상태 해제
-        if (isMultiTouch || isPinchZoom) {
-          setIsMultiTouch(false);
-          
-          setTimeout(() => {
-            checkImageZoomState();
-            setIsPinchZoom(false);
-            setInitialPinchDistance(null);
-            setCurrentPinchDistance(null);
-          }, 100);
-        }
-      }
-      return;
-    }
-    
-    // 모달이 열린 상태에서는 바깥 영역 터치 차단
-    if (isModalOpen) {
-      e.stopPropagation();
-    }
-    
-    // 터치가 완전히 끝났는지 확인 (모든 손가락이 떨어졌는지)
-    if (e.touches && e.touches.length > 0) {
-      return; // 아직 터치가 남아있음
-    }
-    
-    // 멀티터치였다면 핀치 줌 상태 해제
-    if (isMultiTouch || isPinchZoom) {
-      setIsMultiTouch(false);
+    try {
+      // 이벤트 객체 검증
+      if (!e) return;
       
-      // 확대 상태를 다시 체크
-      setTimeout(() => {
-        checkImageZoomState();
-        setIsPinchZoom(false);
-        
-        // 핀치 거리 리셋
-        setInitialPinchDistance(null);
-        setCurrentPinchDistance(null);
-      }, 100);
-      return;
-    }
-    
-    // 이미지가 확대된 상태에서는 모든 스와이프 무시
-    if (isImageZoomed) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) {
-        e.stopImmediatePropagation();
+      // 이미지 영역에서의 터치는 핀치 줌을 위해 브라우저에 맡김
+      if (e.target && e.target.closest && e.target.closest('.modal-image-zoom-allowed')) {
+        // 터치가 완전히 끝났는지 확인
+        if (e.touches && e.touches.length === 0) {
+          // 멀티터치였다면 핀치 줌 상태 해제
+          if (isMultiTouch || isPinchZoom) {
+            setIsMultiTouch(false);
+            
+            setTimeout(() => {
+              checkImageZoomState();
+              setIsPinchZoom(false);
+              setInitialPinchDistance(null);
+            }, 100);
+          }
+        }
+        return;
       }
-      return;
-    }
-    
-    if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+      
+      // 모달이 열린 상태에서는 바깥 영역 터치 차단
+      if (isModalOpen && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      // 터치가 완전히 끝났는지 확인 (모든 손가락이 떨어졌는지)
+      if (e.touches && e.touches.length > 0) {
+        return; // 아직 터치가 남아있음
+      }
+      
+      // 멀티터치였다면 핀치 줌 상태 해제
+      if (isMultiTouch || isPinchZoom) {
+        setIsMultiTouch(false);
+        
+        // 확대 상태를 다시 체크
+        setTimeout(() => {
+          checkImageZoomState();
+          setIsPinchZoom(false);
+          
+          // 핀치 거리 리셋
+          setInitialPinchDistance(null);
+        }, 100);
+        return;
+      }
+      
+      // 이미지가 확대된 상태에서는 모든 스와이프 무시
+      if (isImageZoomed) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) {
+          e.stopImmediatePropagation();
+        }
+        return;
+      }
+      
+      if (!isModalOpen || !isMobileDevice() || isSliding || isPinchZoom) return;
+      if (!touchStart || !touchEnd) return;
+      
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe) {
-      handleNextImage();
-    } else if (isRightSwipe) {
-      handlePrevImage();
+      if (isLeftSwipe) {
+        handleNextImage();
+      } else if (isRightSwipe) {
+        handlePrevImage();
+      }
+    } catch (error) {
+      console.error('Touch end error:', error);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (isSliding) return;
-    
-    // 이미지가 확대된 상태에서는 화살표 키 무시
-    if (isImageZoomed && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      return;
-    }
-    
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      handlePrevImage();
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      handleNextImage();
-    } else if (e.key === 'Escape' && isModalOpen) {
-      // ESC 키로 모달 닫기 기능 제거
-      e.preventDefault();
-      return;
-    }
-    // 개발자 도구 단축키 방지
-    if (e.key === 'F12' || 
-        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-        (e.ctrlKey && e.key === 'U') ||
-        (e.ctrlKey && e.key === 'S')) {
-      e.preventDefault();
-      return false;
+    try {
+      if (!e || isSliding) return;
+      
+      // 이미지가 확대된 상태에서는 화살표 키 무시
+      if (isImageZoomed && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        if (e.preventDefault) e.preventDefault();
+        return;
+      }
+      
+      if (e.key === 'ArrowLeft') {
+        if (e.preventDefault) e.preventDefault();
+        handlePrevImage();
+      } else if (e.key === 'ArrowRight') {
+        if (e.preventDefault) e.preventDefault();
+        handleNextImage();
+      } else if (e.key === 'Escape' && isModalOpen) {
+        // ESC 키로 모달 닫기 기능 제거
+        if (e.preventDefault) e.preventDefault();
+        return;
+      }
+      
+      // 개발 환경에서는 개발자 도구 단축키 차단 비활성화
+      if (process.env.NODE_ENV === 'development') {
+        return;
+      }
+      
+      // 개발자 도구 단축키 방지
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+          (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+          (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+          (e.ctrlKey && e.key === 'U') ||
+          (e.ctrlKey && e.key === 'S')) {
+        if (e.preventDefault) e.preventDefault();
+        return false;
+      }
+    } catch (error) {
+      console.error('Key down error:', error);
     }
   };
 
   // 우클릭 방지
   const handleContextMenu = (e) => {
-    e.preventDefault();
-    return false;
+    try {
+      if (e && e.preventDefault) {
+        e.preventDefault();
+        return false;
+      }
+    } catch (error) {
+      console.error('Context menu error:', error);
+    }
   };
 
   // 드래그 방지
   const handleDragStart = (e) => {
-    e.preventDefault();
-    return false;
+    try {
+      if (e && e.preventDefault) {
+        e.preventDefault();
+        return false;
+      }
+    } catch (error) {
+      console.error('Drag start error:', error);
+    }
   };
 
   // 이미지 로드 후 보호 속성 추가
   const handleImageLoad = (e) => {
-    e.target.setAttribute('draggable', 'false');
-    e.target.style.userSelect = 'none';
-    e.target.style.WebkitUserSelect = 'none';
-    e.target.style.MozUserSelect = 'none';
-    e.target.style.msUserSelect = 'none';
-    e.target.style.pointerEvents = 'none';
+    try {
+      if (e && e.target) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Image loaded successfully:', e.target.src);
+        }
+        e.target.setAttribute('draggable', 'false');
+        e.target.style.userSelect = 'none';
+        e.target.style.WebkitUserSelect = 'none';
+        e.target.style.MozUserSelect = 'none';
+        e.target.style.msUserSelect = 'none';
+        e.target.style.pointerEvents = 'none';
+      }
+    } catch (error) {
+      console.error('Image load error:', error);
+    }
+  };
+
+  // 이미지 로드 실패 핸들러
+  const handleImageError = (e) => {
+    try {
+      if (e && e.target) {
+        console.error('Failed to load image:', e.target.src);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Image error details:', {
+            src: e.target.src,
+            naturalWidth: e.target.naturalWidth,
+            naturalHeight: e.target.naturalHeight,
+            complete: e.target.complete
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Image error handler error:', error);
+    }
   };
 
   // 개발자 도구 감지 (Safari 호환성 개선)
   useEffect(() => {
+    // 개발 환경에서는 개발자 도구 감지 비활성화
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     // Safari 감지
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
@@ -663,91 +825,150 @@ function GallerySection() {
   // 이미지 보호를 위한 전역 이벤트 리스너
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
-      if (e.key === 'F12' || 
-          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-          (e.ctrlKey && e.key === 'U') ||
-          (e.ctrlKey && e.key === 'S')) {
-        e.preventDefault();
-        return false;
+      try {
+        // 개발 환경에서는 개발자 도구 단축키 차단 비활성화
+        if (process.env.NODE_ENV === 'development') {
+          return;
+        }
+        
+        if (!e || !e.key) return;
+        
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+            (e.ctrlKey && e.key === 'U') ||
+            (e.ctrlKey && e.key === 'S')) {
+          if (e.preventDefault) e.preventDefault();
+          return false;
+        }
+      } catch (error) {
+        console.error('Global key down error:', error);
       }
     };
 
     const handleGlobalContextMenu = (e) => {
-      e.preventDefault();
-      return false;
+      try {
+        // 개발 환경에서는 우클릭 차단 비활성화 (이미지는 여전히 보호)
+        if (process.env.NODE_ENV === 'development') {
+          // 이미지에 대해서만 우클릭 방지
+          if (e && e.target && e.target.tagName === 'IMG') {
+            if (e.preventDefault) e.preventDefault();
+            return false;
+          }
+          return;
+        }
+        
+        if (e && e.preventDefault) {
+          e.preventDefault();
+          return false;
+        }
+      } catch (error) {
+        console.error('Global context menu error:', error);
+      }
     };
 
     const handleGlobalSelectStart = (e) => {
-      // 이미지나 갤러리 컨테이너 내부에서만 선택 방지
-      if (e.target.tagName === 'IMG' || e.target.closest('.container')) {
-        e.preventDefault();
-        return false;
+      try {
+        // 이미지나 갤러리 컨테이너 내부에서만 선택 방지
+        if (e && e.target && (e.target.tagName === 'IMG' || (e.target.closest && e.target.closest('.container')))) {
+          if (e.preventDefault) e.preventDefault();
+          return false;
+        }
+      } catch (error) {
+        console.error('Global select start error:', error);
       }
     };
 
     const handleGlobalDragStart = (e) => {
-      if (e.target.tagName === 'IMG') {
-        e.preventDefault();
-        return false;
+      try {
+        if (e && e.target && e.target.tagName === 'IMG') {
+          if (e.preventDefault) e.preventDefault();
+          return false;
+        }
+      } catch (error) {
+        console.error('Global drag start error:', error);
       }
     };
 
-    document.addEventListener('keydown', handleGlobalKeyDown);
-    document.addEventListener('contextmenu', handleGlobalContextMenu);
-    document.addEventListener('selectstart', handleGlobalSelectStart);
-    document.addEventListener('dragstart', handleGlobalDragStart);
+    if (document && document.addEventListener) {
+      document.addEventListener('keydown', handleGlobalKeyDown);
+      document.addEventListener('contextmenu', handleGlobalContextMenu);
+      document.addEventListener('selectstart', handleGlobalSelectStart);
+      document.addEventListener('dragstart', handleGlobalDragStart);
+    }
 
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
-      document.removeEventListener('contextmenu', handleGlobalContextMenu);
-      document.removeEventListener('selectstart', handleGlobalSelectStart);
-      document.removeEventListener('dragstart', handleGlobalDragStart);
+      if (document && document.removeEventListener) {
+        document.removeEventListener('keydown', handleGlobalKeyDown);
+        document.removeEventListener('contextmenu', handleGlobalContextMenu);
+        document.removeEventListener('selectstart', handleGlobalSelectStart);
+        document.removeEventListener('dragstart', handleGlobalDragStart);
+      }
     };
   }, []);
 
   // GSAP 스크롤 애니메이션
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    let tl;
+    
+    try {
+      if (!gsap || !ScrollTrigger) return;
+      
+      gsap.registerPlugin(ScrollTrigger);
 
-    // ScrollTrigger 설정 (모바일 최적화)
-    ScrollTrigger.config({
-      ignoreMobileResize: true,
-      autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
-    });
+      // ScrollTrigger 설정 (모바일 최적화)
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+      });
 
-    // 초기 상태: 보이지 않게 설정
-    gsap.set([titleRef.current, carouselRef.current], {
-      opacity: 0,
-      y: 10,
-    });
+      // refs 존재 여부 확인
+      if (!titleRef.current || !carouselRef.current) return;
 
-          const tl = gsap.timeline({
+      // 초기 상태: 보이지 않게 설정
+      gsap.set([titleRef.current, carouselRef.current], {
+        opacity: 0,
+        y: 10,
+      });
+
+      tl = gsap.timeline({
         scrollTrigger: {
           trigger: titleRef.current,
           start: "top 100%",
           end: "center center",
           toggleActions: "play none none none",
-        invalidateOnRefresh: false,
-      },
-    });
+          invalidateOnRefresh: false,
+        },
+      });
 
-    // 순차적 애니메이션
-    tl.to(titleRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 1,
-      ease: "power2.out",
-    }).to(carouselRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 1.0,
-      ease: "power2.out",
-    });
+      // 순차적 애니메이션
+      tl.to(titleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: "power2.out",
+      }).to(carouselRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 1.0,
+        ease: "power2.out",
+      });
+    } catch (error) {
+      console.error('GSAP animation error:', error);
+    }
 
     return () => {
-      tl.kill();
+      try {
+        if (tl) {
+          tl.kill();
+        }
+        if (ScrollTrigger) {
+          ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+        }
+      } catch (error) {
+        console.error('GSAP cleanup error:', error);
+      }
     };
   }, []);
 
@@ -853,7 +1074,11 @@ function GallerySection() {
     if (!isModalOpen) return;
 
     const checkZoomInterval = setInterval(() => {
-      checkImageZoomState();
+      try {
+        checkImageZoomState();
+      } catch (error) {
+        console.error('Check zoom interval error:', error);
+      }
     }, 500); // 0.5초마다 체크
 
     return () => {
@@ -892,6 +1117,7 @@ function GallerySection() {
                 decoding="async"
                 draggable="false"
                 onLoad={handleImageLoad}
+                onError={handleImageError}
                 onContextMenu={handleContextMenu}
                 onDragStart={handleDragStart}
                 style={{
@@ -958,6 +1184,7 @@ function GallerySection() {
               className={`${styles.modalImage} ${isSliding ? styles.sliding : ''} modal-image-zoom-allowed`}
               draggable="false"
               onLoad={handleImageLoad}
+              onError={handleImageError}
               onContextMenu={handleContextMenu}
               onDragStart={handleDragStart}
               style={{
