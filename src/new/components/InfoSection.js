@@ -16,7 +16,7 @@ function InfoSection() {
           <b>故신휘철 · 박선화</b> 의 딸 <b>신새미</b>
         </div>
         <div className={styles.infoText}>
-          <b>2025년 7월 5일 토요일 오전 10시 30분</b>
+          <b>2025년 7월 5일 토요일 오전 11시 30분</b>
           <div>종로 까델루뽀</div>
           {(() => {
             const weddingDate = new Date('2025-07-05');
