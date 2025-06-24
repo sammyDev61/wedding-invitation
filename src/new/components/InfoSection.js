@@ -19,7 +19,7 @@ function InfoSection() {
         </div>
         <div className={styles.infoText}>
           <b>2025년 7월 5일 토요일</b><br/>
-          <b>오전 10시 30분</b>
+          <b>오전 11시 30분</b>
           <div>종로 까델루뽀</div>
           {(() => {
             const weddingDate = new Date('2025-07-05');

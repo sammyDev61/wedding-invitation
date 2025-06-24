@@ -266,58 +266,57 @@
   /* 터치 최적화 - 스크롤 차단하되 핀치줌은 허용 */
   touch-action: pinch-zoom;
   -webkit-tap-highlight-color: transparent;
-  overflow: hidden;
+  overflow: visible;
   overscroll-behavior: none;
   /* 클릭 이벤트가 배경으로 전달되도록 */
   pointer-events: none;
 }
 
-/* PC에서 모달 크기 제한 - 이미지 비율(3:4) 고려 */
+/* PC에서 모달 크기 제한 - 반응형으로 수정 */
 @media (min-width: 769px) {
   .modalContent {
-    max-width: 680px;
-    max-height: 900px;
-    /* 이미지와 동일한 크기로 설정하여 버튼이 이미지 위에 오버레이 */
-    padding: 0;
+    max-width: 90vw;
+    max-height: 90vh;
+    /* 버튼들을 위한 충분한 패딩 제공 */
+    padding: 2rem;
   }
   
   .modalImage {
-    max-width: 680px;
-    max-height: 900px;
-    /* 실제 이미지 크기 - 3:4 비율 유지 */
+    max-width: 100%;
+    max-height: 100%;
+    /* 실제 이미지 크기 - 3:4 비율 유지하되 컨테이너에 맞게 조정 */
     width: auto;
     height: auto;
   }
   
-  /* PC에서 버튼들이 이미지 안쪽에 위치하도록 */
+  /* PC에서 버튼들이 안전한 위치에 있도록 */
   .closeButton {
-    top: 10px !important;
-    right: 15px !important;
+    top: 20px !important;
+    right: 20px !important;
   }
   
-  
   .modalNavButton[style*="left"] {
-    left: 15px !important;
+    left: 20px !important;
   }
   
   .modalNavButton[style*="right"] {
-    right: 15px !important;
+    right: 20px !important;
   }
 }
 
-/* 큰 화면에서는 조금 더 크게 */
+/* 큰 화면에서는 더 넓게 사용 */
 @media (min-width: 1200px) {
   .modalContent {
-    max-width: 750px;
-    max-height: 1000px;
-    /* 이미지와 동일한 크기 */
-    padding: 0;
+    max-width: 85vw;
+    max-height: 85vh;
+    /* 버튼들을 위한 충분한 패딩 유지 */
+    padding: 2.5rem;
   }
   
   .modalImage {
-    max-width: 750px;
-    max-height: 1000px;
-    /* 실제 이미지 크기 */
+    max-width: 100%;
+    max-height: 100%;
+    /* 큰 화면에서도 컨테이너에 맞게 조정 */
   }
 }
 
