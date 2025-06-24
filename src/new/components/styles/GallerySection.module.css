@@ -272,13 +272,14 @@
   pointer-events: none;
 }
 
-/* PC에서 모달 크기 제한 - 반응형으로 수정 */
+/* PC에서 모달 크기 제한 - 적당한 크기로 조정 */
 @media (min-width: 769px) {
   .modalContent {
-    max-width: 90vw;
-    max-height: 90vh;
-    /* 버튼들을 위한 충분한 패딩 제공 */
-    padding: 2rem;
+    max-width: 600px;
+    max-height: 80vh;
+    /* 패딩 제거하여 버튼이 이미지 위에 오버레이되도록 */
+    padding: 0;
+    position: relative;
   }
   
   .modalImage {
@@ -289,10 +290,82 @@
     height: auto;
   }
   
-  /* PC에서 버튼들이 안전한 위치에 있도록 */
+  /* PC에서 버튼들이 이미지 위에 오버레이되도록 */
+  .closeButton {
+    top: 15px !important;
+    right: 15px !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 18px !important;
+    z-index: 20 !important;
+  }
+  
+  .closeButton svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .modalNavButton {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 20px !important;
+    z-index: 20 !important;
+  }
+  
+  .modalNavButton svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .modalNavButton[style*="left"] {
+    left: 15px !important;
+  }
+  
+  .modalNavButton[style*="right"] {
+    right: 15px !important;
+  }
+}
+
+/* 큰 화면에서도 적당한 크기 유지 */
+@media (min-width: 1200px) {
+  .modalContent {
+    max-width: 700px;
+    max-height: 85vh;
+    /* 패딩 제거하여 버튼이 이미지 위에 오버레이되도록 */
+    padding: 0;
+  }
+  
+  .modalImage {
+    max-width: 100%;
+    max-height: 100%;
+    /* 큰 화면에서도 컨테이너에 맞게 조정 */
+  }
+  
+  /* 큰 화면에서 버튼 크기 조금 더 크게 */
   .closeButton {
     top: 20px !important;
     right: 20px !important;
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 19px !important;
+    z-index: 20 !important;
+  }
+  
+  .closeButton svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+  
+  .modalNavButton {
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 22px !important;
+    z-index: 20 !important;
+  }
+  
+  .modalNavButton svg {
+    width: 20px !important;
+    height: 20px !important;
   }
   
   .modalNavButton[style*="left"] {
@@ -301,22 +374,6 @@
   
   .modalNavButton[style*="right"] {
     right: 20px !important;
-  }
-}
-
-/* 큰 화면에서는 더 넓게 사용 */
-@media (min-width: 1200px) {
-  .modalContent {
-    max-width: 85vw;
-    max-height: 85vh;
-    /* 버튼들을 위한 충분한 패딩 유지 */
-    padding: 2.5rem;
-  }
-  
-  .modalImage {
-    max-width: 100%;
-    max-height: 100%;
-    /* 큰 화면에서도 컨테이너에 맞게 조정 */
   }
 }
 
